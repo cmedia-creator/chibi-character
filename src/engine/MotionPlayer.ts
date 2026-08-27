@@ -5,9 +5,19 @@ type PlayOptions = {
   interrupt?: boolean;
 };
 
+type BoneBaseline = {
+  angle: number;
+  x: number;
+  y: number;
+  scaleX: number;
+  scaleY: number;
+  alpha: number;
+};
+
 export class MotionPlayer {
   private activeMotion: MotionDefinition | null = null;
   private activeTracks: MotionTrack[] = [];
+  private activeBaselines = new Map<string, BoneBaseline>();
   private elapsed = 0;
   private resolveActive: (() => void) | null = null;
 
@@ -32,12 +42,24 @@ export class MotionPlayer {
       const currentPriority = this.activeMotion.priority ?? 0;
       const nextPriority = motion.priority ?? 0;
       if (!options.interrupt && nextPriority <= currentPriority) return Promise.resolve();
-      this.finishActive();
+      this.finishActive(true);
     }
 
     const tracks = this.normalizeTracks(motion);
+    this.activeBaselines.clear();
     for (const track of tracks) {
-      if (!this.bones.has(track.bone)) throw new Error(`Unknown bone: ${track.bone}`);
+      const bone = this.bones.get(track.bone);
+      if (!bone) throw new Error(`Unknown bone: ${track.bone}`);
+      if (!this.activeBaselines.has(track.bone)) {
+        this.activeBaselines.set(track.bone, {
+          angle: bone.angle,
+          x: bone.x,
+          y: bone.y,
+          scaleX: bone.scale.x,
+          scaleY: bone.scale.y,
+          alpha: bone.alpha,
+        });
+      }
     }
 
     this.activeMotion = motion;
@@ -75,12 +97,24 @@ export class MotionPlayer {
       if (alpha !== null) bone.alpha = alpha;
     }
 
-    if (this.elapsed >= motion.duration) this.finishActive();
+    if (this.elapsed >= motion.duration) this.finishActive(true);
   }
 
-  private finishActive(): void {
+  private finishActive(restoreBaseline: boolean): void {
+    if (restoreBaseline) {
+      for (const [boneName, baseline] of this.activeBaselines) {
+        const bone = this.bones.get(boneName);
+        if (!bone) continue;
+        bone.angle = baseline.angle;
+        bone.position.set(baseline.x, baseline.y);
+        bone.scale.set(baseline.scaleX, baseline.scaleY);
+        bone.alpha = baseline.alpha;
+      }
+    }
+
     this.activeMotion = null;
     this.activeTracks = [];
+    this.activeBaselines.clear();
     this.elapsed = 0;
     this.resolveActive?.();
     this.resolveActive = null;
