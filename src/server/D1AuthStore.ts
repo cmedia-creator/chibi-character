@@ -154,7 +154,7 @@ export class D1AuthStore implements AuthStore {
       id: row.id,
       userId: row.user_id,
       credentialId: row.credential_id,
-      publicKey: toUint8Array(row.public_key),
+      publicKey: toArrayBufferBackedUint8Array(row.public_key),
       signCount: row.sign_count,
       transports: parseStringArray(row.transports_json),
       createdAt: row.created_at,
@@ -178,8 +178,11 @@ function randomToken(byteLength: number): string {
   return [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-function toUint8Array(value: ArrayBuffer | Uint8Array): Uint8Array {
-  return value instanceof Uint8Array ? value : new Uint8Array(value);
+function toArrayBufferBackedUint8Array(value: ArrayBuffer | Uint8Array): Uint8Array<ArrayBuffer> {
+  const source = value instanceof Uint8Array ? value : new Uint8Array(value);
+  const copy = new Uint8Array(new ArrayBuffer(source.byteLength));
+  copy.set(source);
+  return copy;
 }
 
 function parseStringArray(value: string): string[] {
