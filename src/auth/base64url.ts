@@ -16,3 +16,10 @@ export function base64UrlToBytes(value: string): Uint8Array {
   for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
   return bytes;
 }
+
+export function base64UrlToArrayBuffer(value: string): ArrayBuffer {
+  const bytes = base64UrlToBytes(value);
+  const buffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(buffer).set(bytes);
+  return buffer;
+}
