@@ -1,0 +1,91 @@
+name: d1-migrate
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'migrations/**'
+      - 'wrangler.jsonc'
+      - '.github/workflows/d1-migrate.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: d1-production-migration
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Validate Cloudflare credentials
+        shell: bash
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo 'CLOUDFLARE_API_TOKEN is missing'; exit 1; }
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo 'CLOUDFLARE_ACCOUNT_ID is missing'; exit 1; }
+
+      - name: List unapplied migrations
+        run: npx wrangler d1 migrations list chibi-character-db --remote
+
+      - name: Apply remote migrations
+        run: npx wrangler d1 migrations apply chibi-character-db --remote
+
+      - name: Verify migration history
+        run: |
+          npx wrangler d1 execute chibi-character-db --remote --json --command "SELECT name, applied_at FROM d1_migrations ORDER BY id;" | tee d1-migrations.json
+
+      - name: Verify required tables
+        shell: bash
+        run: |
+          npx wrangler d1 execute chibi-character-db --remote --json --command "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;" | tee d1-tables.json
+          node <<'NODE'
+          const fs = require('fs');
+          const text = fs.readFileSync('d1-tables.json', 'utf8');
+          const required = [
+            'users',
+            'passkey_credentials',
+            'webauthn_challenges',
+            'sessions',
+            'characters',
+            'profiles',
+            'entitlements',
+            'share_assets',
+            'payment_events',
+            'd1_migrations',
+          ];
+          const missing = required.filter((name) => !text.includes(`\"${name}\"`));
+          if (missing.length) {
+            console.error(`Missing required D1 tables: ${missing.join(', ')}`);
+            process.exit(1);
+          }
+          console.log(`Verified ${required.length} required D1 tables.`);
+          NODE
+
+      - name: Upload migration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d1-migration-evidence
+          path: |
+            d1-migrations.json
+            d1-tables.json
+          if-no-files-found: ignore
+          retention-days: 7
