@@ -27,9 +27,12 @@
         </div>
       </section>
 
-      <section class="controls">
-        <button type="button" id="wave-button">手を振るテスト</button>
-        <p>DEBUG RIGをタップしても反応します。idle / blink / wave の技術検証専用です。</p>
+      <section class="controls" aria-label="Gate 1 controls">
+        <div class="control-grid">
+          <button type="button" id="blink-button">瞬きテスト</button>
+          <button type="button" id="wave-button">手を振るテスト</button>
+        </div>
+        <p>idle は常時自動。blink は自動ランダム＋手動確認、wave はボタンまたはDEBUG RIGタップで確認できます。</p>
       </section>
     </main>
     <script type="module" src="/src/main.ts"></script>
