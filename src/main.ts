@@ -4,6 +4,7 @@ import { AtlasCharacterRig } from './engine/AtlasCharacterRig';
 import { BehaviorController, type BehaviorState } from './engine/BehaviorController';
 import { CharacterRig } from './engine/CharacterRig';
 import { mountCharacterInspector } from './debug/CharacterInspector';
+import { mountCharacterCreator } from './creator/CharacterCreator';
 import { mountProfileEditor } from './profile/ProfileEditor';
 import { mountPublicProfilePreview } from './profile/PublicProfileView';
 import { mountShareStudio } from './share/ShareStudio';
@@ -137,6 +138,11 @@ if (params.has('inspect') && rig instanceof AtlasCharacterRig) {
   unmountInspector = mountCharacterInspector(rig);
 }
 
+let unmountCreator: (() => void) | null = null;
+if (params.has('creator') && rig instanceof AtlasCharacterRig) {
+  unmountCreator = await mountCharacterCreator({ rig });
+}
+
 let unmountProfile: (() => void) | null = null;
 if (params.has('profile')) {
   unmountProfile = await mountProfileEditor({ characterCanvas: app.canvas });
@@ -158,6 +164,7 @@ if (params.has('public')) {
 window.addEventListener('beforeunload', () => {
   resizeObserver.disconnect();
   unmountInspector?.();
+  unmountCreator?.();
   unmountProfile?.();
   unmountShareStudio?.();
   unmountPublicProfile?.();

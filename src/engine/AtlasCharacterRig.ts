@@ -6,6 +6,7 @@ import type {
   MotionCatalog,
   MotionDefinition,
   PartDebugState,
+  TextureFrameDefinition,
 } from './types';
 
 export class AtlasCharacterRig {
@@ -76,6 +77,28 @@ export class AtlasCharacterRig {
 
   blinkNow(): Promise<void> {
     return this.blink();
+  }
+
+  async replacePartSource(
+    slot: string,
+    source: { asset: string; frame?: TextureFrameDefinition },
+  ): Promise<void> {
+    const sprite = this.slots.get(slot);
+    if (!sprite) return;
+    await Assets.load(source.asset);
+    const sourceTexture = Assets.get(source.asset) as Texture | undefined;
+    if (!sourceTexture) throw new Error(`Texture missing: ${source.asset}`);
+
+    const width = sprite.width;
+    const height = sprite.height;
+    sprite.texture = source.frame
+      ? new Texture({
+          source: sourceTexture.source,
+          frame: new Rectangle(source.frame.x, source.frame.y, source.frame.width, source.frame.height),
+        })
+      : sourceTexture;
+    sprite.width = width;
+    sprite.height = height;
   }
 
   getPartDebugStates(): PartDebugState[] {

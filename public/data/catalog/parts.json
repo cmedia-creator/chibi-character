@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "bundles": [
+    {
+      "id": "face.base.001",
+      "category": "face",
+      "name": "Soft Face 01",
+      "description": "初期テスト用の標準フェイス。",
+      "packId": "free_base",
+      "isFree": true,
+      "tags": ["anime", "soft", "idol"],
+      "sources": {
+        "face": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 174, "y": 4, "width": 137, "height": 151 }
+        },
+        "mouth": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 60, "y": 258, "width": 42, "height": 15 }
+        }
+      }
+    },
+    {
+      "id": "eyes.violet.001",
+      "category": "eyes",
+      "name": "Violet Idol Eyes",
+      "description": "開眼・閉眼をセットで持つ初期アイドルアイ。",
+      "packId": "free_base",
+      "isFree": true,
+      "tags": ["violet", "bright", "idol"],
+      "sources": {
+        "eyes_open": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 324, "y": 54, "width": 152, "height": 47 }
+        },
+        "eyes_closed": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 491, "y": 75, "width": 127, "height": 35 }
+        }
+      }
+    },
+    {
+      "id": "hair.long.ribbon.001",
+      "category": "hair",
+      "name": "Long Wave Ribbon",
+      "description": "ロングウェーブ＋前髪の初期K-POPアイドル風ヘア。",
+      "packId": "free_base",
+      "isFree": true,
+      "tags": ["long", "wave", "ribbon", "kpop"],
+      "sources": {
+        "hair_back": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 22, "y": 4, "width": 115, "height": 152 }
+        },
+        "hair_front": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 180, "y": 164, "width": 124, "height": 152 }
+        }
+      }
+    },
+    {
+      "id": "outfit.stage.blueblack.001",
+      "category": "outfit",
+      "name": "Blue Black Stage",
+      "description": "白・黒・淡いブルーのステージ衣装セット。",
+      "packId": "free_base",
+      "isFree": true,
+      "tags": ["stage", "blue", "black", "kpop"],
+      "sources": {
+        "torso": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 341, "y": 169, "width": 122, "height": 145 }
+        },
+        "arm_L": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 522, "y": 181, "width": 51, "height": 116 }
+        },
+        "arm_R": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 66, "y": 338, "width": 52, "height": 122 }
+        },
+        "leg_L": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 219, "y": 330, "width": 48, "height": 146 }
+        },
+        "leg_R": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 369, "y": 329, "width": 55, "height": 152 }
+        }
+      }
+    },
+    {
+      "id": "accessory.none.001",
+      "category": "accessory",
+      "name": "No Accessory",
+      "description": "追加アクセサリーなし。",
+      "packId": "free_base",
+      "isFree": true,
+      "tags": ["none"],
+      "sources": {}
+    }
+  ],
+  "packs": [
+    {
+      "id": "free_base",
+      "name": "FREE BASE",
+      "description": "サービス開始時の無料基本パーツ。",
+      "priceJpy": 0,
+      "available": true,
+      "themeTags": ["basic", "kpop"]
+    },
+    {
+      "id": "pack_y2k_001",
+      "name": "Y2K IDOL PACK",
+      "description": "Y2Kヘア・衣装・アクセサリー・共有テーマをまとめた有料パック。",
+      "priceJpy": 500,
+      "available": false,
+      "themeTags": ["y2k", "idol"]
+    },
+    {
+      "id": "pack_stage_001",
+      "name": "STAGE IDOL PACK",
+      "description": "ステージ衣装・ポーズ・プロフィールテーマをまとめた有料パック。",
+      "priceJpy": 500,
+      "available": false,
+      "themeTags": ["stage", "kpop"]
+    },
+    {
+      "id": "pack_heisei_001",
+      "name": "HEISEI OSHI PACK",
+      "description": "平成レトロ系のパーツ・部屋・共有カードテーマ。",
+      "priceJpy": 500,
+      "available": false,
+      "themeTags": ["heisei", "retro"]
+    }
+  ]
+}
