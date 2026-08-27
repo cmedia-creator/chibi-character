@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "themes": [
+    {
+      "id": "room.default",
+      "name": "SOFT STUDIO",
+      "wallColor": "#eee8f3",
+      "floorColor": "#d5c8df",
+      "accentColor": "#8e72a8",
+      "panelColor": "#ffffff"
+    },
+    {
+      "id": "room.y2k",
+      "name": "Y2K ROOM",
+      "wallColor": "#ddf6ff",
+      "floorColor": "#c8ddf6",
+      "accentColor": "#ff75bd",
+      "panelColor": "#fef5ff"
+    },
+    {
+      "id": "room.stage",
+      "name": "MINI STAGE",
+      "wallColor": "#25212e",
+      "floorColor": "#17141d",
+      "accentColor": "#bda1ff",
+      "panelColor": "#3b3447"
+    }
+  ],
+  "furniture": [
+    {
+      "id": "furniture.rug.001",
+      "name": "Round Rug",
+      "kind": "rug",
+      "width": 430,
+      "height": 150,
+      "color": "#cdb7dc",
+      "accentColor": "#9a7caf",
+      "defaultX": 512,
+      "defaultY": 845,
+      "defaultScale": 1
+    },
+    {
+      "id": "furniture.sofa.001",
+      "name": "Mini Sofa",
+      "kind": "sofa",
+      "width": 300,
+      "height": 190,
+      "color": "#f7f1fa",
+      "accentColor": "#9c83af",
+      "defaultX": 225,
+      "defaultY": 720,
+      "defaultScale": 1
+    },
+    {
+      "id": "furniture.table.001",
+      "name": "Side Table",
+      "kind": "table",
+      "width": 140,
+      "height": 150,
+      "color": "#f0e5d7",
+      "accentColor": "#9e8267",
+      "defaultX": 790,
+      "defaultY": 750,
+      "defaultScale": 1
+    },
+    {
+      "id": "furniture.plant.001",
+      "name": "Green Plant",
+      "kind": "plant",
+      "width": 120,
+      "height": 220,
+      "color": "#7fbc8b",
+      "accentColor": "#456d52",
+      "defaultX": 865,
+      "defaultY": 650,
+      "defaultScale": 1
+    },
+    {
+      "id": "furniture.lamp.001",
+      "name": "Floor Lamp",
+      "kind": "lamp",
+      "width": 90,
+      "height": 260,
+      "color": "#ffeaa2",
+      "accentColor": "#8b7560",
+      "defaultX": 115,
+      "defaultY": 630,
+      "defaultScale": 1
+    },
+    {
+      "id": "furniture.speaker.001",
+      "name": "Mini Speaker",
+      "kind": "speaker",
+      "width": 110,
+      "height": 180,
+      "color": "#2f2c36",
+      "accentColor": "#c7ff59",
+      "defaultX": 905,
+      "defaultY": 815,
+      "defaultScale": 1
+    }
+  ]
+}
