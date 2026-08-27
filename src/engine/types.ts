@@ -1,4 +1,4 @@
-export type BoneName = 'body' | 'arm_L' | 'arm_R' | 'head';
+export type BoneName = 'body' | 'arm_L' | 'arm_R' | 'head' | 'leg_L' | 'leg_R';
 
 export interface BoneDefinition {
   name: BoneName;
@@ -42,17 +42,40 @@ export type EaseName = 'linear' | 'easeInOut' | 'easeOut';
 
 export interface MotionKeyframe {
   t: number;
-  rotation: number;
+  rotation?: number;
+  x?: number;
+  y?: number;
+  scaleX?: number;
+  scaleY?: number;
+  alpha?: number;
   ease?: EaseName;
+}
+
+export interface MotionTrack {
+  bone: BoneName;
+  keyframes: MotionKeyframe[];
 }
 
 export interface MotionDefinition {
   id: string;
   duration: number;
-  bone: BoneName;
-  keyframes: MotionKeyframe[];
+  priority?: number;
+  tracks?: MotionTrack[];
+  /** Legacy single-bone form kept while Phase 1 data migrates. */
+  bone?: BoneName;
+  keyframes?: MotionKeyframe[];
 }
 
 export interface MotionCatalog {
   motions: MotionDefinition[];
+}
+
+export interface PartDebugState {
+  slot: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  visible: boolean;
 }
