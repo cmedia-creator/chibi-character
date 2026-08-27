@@ -1,6 +1,7 @@
 import { Application, Container } from 'pixi.js';
 import './style.css';
 import { AtlasCharacterRig } from './engine/AtlasCharacterRig';
+import { CharacterRig } from './engine/CharacterRig';
 
 const WORLD_SIZE = 1024;
 
@@ -33,10 +34,23 @@ stageHost.appendChild(app.canvas);
 const world = new Container();
 app.stage.addChild(world);
 
-const rig = await AtlasCharacterRig.create(
-  '/data/characters/test-character-01.json',
-  '/data/motions/phase1.json',
-);
+let isTestCharacter = true;
+let rig: AtlasCharacterRig | CharacterRig;
+
+try {
+  rig = await AtlasCharacterRig.create(
+    '/data/characters/test-character-01.json',
+    '/data/motions/phase1.json',
+  );
+} catch (error) {
+  console.warn('Test character atlas is not available yet. Falling back to DEBUG RIG.', error);
+  isTestCharacter = false;
+  rig = await CharacterRig.create(
+    '/data/characters/debug-rig-01.json',
+    '/data/motions/phase1.json',
+  );
+}
+
 world.addChild(rig.root);
 
 const fitWorldToStage = (): void => {
@@ -55,6 +69,7 @@ fitWorldToStage();
 const resizeObserver = new ResizeObserver(fitWorldToStage);
 resizeObserver.observe(stageHost);
 
+const readyLabel = (): string => isTestCharacter ? 'TEST CHARACTER ACTIVE' : 'DEBUG RIG FALLBACK';
 const setStatus = (message: string): void => {
   actionStatus.textContent = message;
 };
@@ -62,13 +77,13 @@ const setStatus = (message: string): void => {
 const blink = async (): Promise<void> => {
   setStatus('BLINK TEST');
   await rig.blinkNow();
-  setStatus('TEST CHARACTER ACTIVE');
+  setStatus(readyLabel());
 };
 
 const wave = async (): Promise<void> => {
   setStatus('WAVE TEST');
   await rig.play('motion.wave.001');
-  setStatus('TEST CHARACTER ACTIVE');
+  setStatus(readyLabel());
 };
 
 rig.onTap(() => {
@@ -86,7 +101,7 @@ app.ticker.add((ticker: { deltaMS: number }) => {
 });
 
 engineStatus.textContent = 'ENGINE READY';
-setStatus('TEST CHARACTER ACTIVE');
+setStatus(readyLabel());
 
 window.addEventListener('beforeunload', () => {
   resizeObserver.disconnect();
