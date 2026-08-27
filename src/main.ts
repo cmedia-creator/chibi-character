@@ -7,9 +7,12 @@ import { mountCharacterInspector } from './debug/CharacterInspector';
 import { mountCharacterCreator } from './creator/CharacterCreator';
 import { mountProfileEditor } from './profile/ProfileEditor';
 import { mountPublicProfilePreview } from './profile/PublicProfileView';
+import { mountRoomEditor } from './room/RoomEditor';
+import { RoomRenderer } from './room/RoomRenderer';
 import { mountShareStudio } from './share/ShareStudio';
 
 const WORLD_SIZE = 1024;
+const params = new URLSearchParams(window.location.search);
 
 const stageHost = document.querySelector<HTMLDivElement>('#pixi-stage');
 const engineStatus = document.querySelector<HTMLSpanElement>('#engine-status');
@@ -45,6 +48,12 @@ stageHost.appendChild(app.canvas);
 
 const world = new Container();
 app.stage.addChild(world);
+
+let roomRenderer: RoomRenderer | null = null;
+if (params.has('room')) {
+  roomRenderer = new RoomRenderer();
+  world.addChild(roomRenderer.container);
+}
 
 let isTestCharacter = true;
 let rig: AtlasCharacterRig | CharacterRig;
@@ -98,7 +107,6 @@ const behaviorLabel = (state: BehaviorState): string => {
 };
 
 const behavior = new BehaviorController(rig, (state) => setStatus(behaviorLabel(state)));
-const params = new URLSearchParams(window.location.search);
 if (params.get('auto') === '0') behavior.setEnabled(false);
 
 const blink = async (): Promise<void> => {
@@ -161,6 +169,11 @@ if (params.has('creator') && rig instanceof AtlasCharacterRig) {
   unmountCreator = await mountCharacterCreator({ rig });
 }
 
+let unmountRoom: (() => void) | null = null;
+if (roomRenderer) {
+  unmountRoom = await mountRoomEditor({ renderer: roomRenderer });
+}
+
 let unmountProfile: (() => void) | null = null;
 if (params.has('profile')) {
   unmountProfile = await mountProfileEditor({ characterCanvas: app.canvas });
@@ -183,9 +196,11 @@ window.addEventListener('beforeunload', () => {
   resizeObserver.disconnect();
   unmountInspector?.();
   unmountCreator?.();
+  unmountRoom?.();
   unmountProfile?.();
   unmountShareStudio?.();
   unmountPublicProfile?.();
   rig.destroy();
+  roomRenderer?.container.destroy({ children: true });
   app.destroy(true);
 });

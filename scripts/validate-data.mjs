@@ -6,14 +6,17 @@ const ROOT = process.cwd();
 const CHARACTER_DIR = path.join(ROOT, 'public', 'data', 'characters');
 const MOTION_FILE = path.join(ROOT, 'public', 'data', 'motions', 'phase1.json');
 const CATALOG_FILE = path.join(ROOT, 'public', 'data', 'catalog', 'parts.json');
+const ROOM_CATALOG_FILE = path.join(ROOT, 'public', 'data', 'rooms', 'catalog.json');
 const TRANSFORM_KEYS = ['rotation', 'x', 'y', 'scaleX', 'scaleY', 'alpha'];
 const CATALOG_CATEGORIES = new Set(['face', 'eyes', 'hair', 'outfit', 'accessory']);
+const FURNITURE_KINDS = new Set(['rug', 'sofa', 'table', 'plant', 'lamp', 'speaker']);
 
 const errors = [];
 const notes = [];
 
 const fail = (scope, message) => errors.push(`${scope}: ${message}`);
 const finite = (value) => typeof value === 'number' && Number.isFinite(value);
+const validHex = (value) => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
 
 async function loadJson(file) {
   try {
@@ -35,7 +38,6 @@ function validateFrame(scope, frame) {
 
 function validateBoneHierarchy(scope, bones, boneNames) {
   const byName = new Map(bones.map((bone) => [bone.name, bone]));
-
   for (const [index, bone] of bones.entries()) {
     const boneScope = `${scope} bone[${index}]`;
     if (bone.parent !== undefined) {
@@ -44,7 +46,6 @@ function validateBoneHierarchy(scope, bones, boneNames) {
       else if (bone.parent === bone.name) fail(boneScope, 'bone cannot parent itself');
     }
   }
-
   for (const bone of bones) {
     const seen = new Set();
     let current = bone.name;
@@ -66,7 +67,6 @@ function validateCharacter(fileName, data) {
   if (!data.root || !finite(data.root.x) || !finite(data.root.y) || !finite(data.root.scale)) {
     fail(scope, 'root.x/root.y/root.scale must be finite numbers');
   }
-
   if (!Array.isArray(data.bones) || data.bones.length === 0) {
     fail(scope, 'bones must be a non-empty array');
     return;
@@ -123,7 +123,6 @@ function validateMotionCatalog(data, knownBones) {
     fail(scope, 'motions must be an array');
     return;
   }
-
   const ids = new Set();
   for (const [motionIndex, motion] of data.motions.entries()) {
     const motionScope = `${scope} motion[${motionIndex}]`;
@@ -131,7 +130,6 @@ function validateMotionCatalog(data, knownBones) {
     if (ids.has(motion.id)) fail(motionScope, `duplicate motion id ${motion.id}`);
     ids.add(motion.id);
     if (!finite(motion.duration) || motion.duration <= 0) fail(motionScope, 'duration must be > 0');
-
     const tracks = normalizeTracks(motion);
     if (tracks.length === 0) fail(motionScope, 'at least one motion track is required');
     for (const [trackIndex, track] of tracks.entries()) {
@@ -164,7 +162,6 @@ function validateCatalog(data) {
     fail(scope, 'bundles and packs must be arrays');
     return;
   }
-
   const packIds = new Set();
   for (const [index, pack] of data.packs.entries()) {
     const packScope = `${scope} pack[${index}]`;
@@ -175,7 +172,6 @@ function validateCatalog(data) {
     if (!finite(pack.priceJpy) || pack.priceJpy < 0) fail(packScope, 'priceJpy must be >= 0');
     if (typeof pack.available !== 'boolean') fail(packScope, 'available must be boolean');
   }
-
   const bundleIds = new Set();
   for (const [index, bundle] of data.bundles.entries()) {
     const bundleScope = `${scope} bundle[${index}]`;
@@ -197,6 +193,45 @@ function validateCatalog(data) {
   }
 }
 
+function validateRoomCatalog(data) {
+  const scope = 'rooms/catalog.json';
+  if (!data || !Array.isArray(data.themes) || !Array.isArray(data.furniture)) {
+    fail(scope, 'themes and furniture must be arrays');
+    return;
+  }
+
+  const themeIds = new Set();
+  for (const [index, theme] of data.themes.entries()) {
+    const themeScope = `${scope} theme[${index}]`;
+    if (typeof theme.id !== 'string' || !theme.id) fail(themeScope, 'id is required');
+    if (themeIds.has(theme.id)) fail(themeScope, `duplicate theme id ${theme.id}`);
+    themeIds.add(theme.id);
+    if (typeof theme.name !== 'string' || !theme.name) fail(themeScope, 'name is required');
+    for (const key of ['wallColor', 'floorColor', 'accentColor', 'panelColor']) {
+      if (!validHex(theme[key])) fail(themeScope, `${key} must be a 6-digit hex color`);
+    }
+  }
+
+  const furnitureIds = new Set();
+  for (const [index, item] of data.furniture.entries()) {
+    const itemScope = `${scope} furniture[${index}]`;
+    if (typeof item.id !== 'string' || !item.id) fail(itemScope, 'id is required');
+    if (furnitureIds.has(item.id)) fail(itemScope, `duplicate furniture id ${item.id}`);
+    furnitureIds.add(item.id);
+    if (typeof item.name !== 'string' || !item.name) fail(itemScope, 'name is required');
+    if (!FURNITURE_KINDS.has(item.kind)) fail(itemScope, `unknown kind ${String(item.kind)}`);
+    for (const key of ['width', 'height', 'defaultX', 'defaultY', 'defaultScale']) {
+      if (!finite(item[key])) fail(itemScope, `${key} must be a finite number`);
+    }
+    if (finite(item.width) && item.width <= 0) fail(itemScope, 'width must be > 0');
+    if (finite(item.height) && item.height <= 0) fail(itemScope, 'height must be > 0');
+    if (finite(item.defaultScale) && item.defaultScale <= 0) fail(itemScope, 'defaultScale must be > 0');
+    for (const key of ['color', 'accentColor']) {
+      if (!validHex(item[key])) fail(itemScope, `${key} must be a 6-digit hex color`);
+    }
+  }
+}
+
 const files = (await readdir(CHARACTER_DIR)).filter((name) => name.endsWith('.json')).sort();
 const allBones = new Set();
 for (const fileName of files) {
@@ -209,6 +244,8 @@ const motions = await loadJson(MOTION_FILE);
 validateMotionCatalog(motions, allBones);
 const catalog = await loadJson(CATALOG_FILE);
 validateCatalog(catalog);
+const roomCatalog = await loadJson(ROOM_CATALOG_FILE);
+validateRoomCatalog(roomCatalog);
 
 for (const note of notes) console.log(`NOTE ${note}`);
 if (errors.length) {
@@ -217,4 +254,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Validated ${files.length} character definition(s), ${motions?.motions?.length ?? 0} motion(s), ${catalog?.bundles?.length ?? 0} catalog bundle(s), and ${catalog?.packs?.length ?? 0} pack(s).`);
+console.log(`Validated ${files.length} character definition(s), ${motions?.motions?.length ?? 0} motion(s), ${catalog?.bundles?.length ?? 0} catalog bundle(s), ${catalog?.packs?.length ?? 0} pack(s), ${roomCatalog?.themes?.length ?? 0} room theme(s), and ${roomCatalog?.furniture?.length ?? 0} furniture item(s).`);
