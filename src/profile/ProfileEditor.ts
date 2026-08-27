@@ -1,3 +1,4 @@
+import './profile.css';
 import { DraftStore } from '../data/DraftStore';
 import { createEmptyProfileDraft, type OshiProfileDraft, type Visibility } from '../data/models';
 import { canvasToPngBlob, renderProfileCard } from '../share/ProfileCardRenderer';
@@ -86,6 +87,25 @@ export async function mountProfileEditor(options: EditorOptions): Promise<() => 
   const shareButton = root.querySelector<HTMLButtonElement>('[data-share-button]')!;
   const saveState = root.querySelector<HTMLElement>('[data-save-state]')!;
 
+  const applyField = (key: keyof OshiProfileDraft, value: string): void => {
+    if (key === 'visibility') {
+      draft = { ...draft, visibility: value as Visibility };
+      return;
+    }
+    if (key === 'schemaVersion' || key === 'updatedAt') return;
+    draft = { ...draft, [key]: value };
+  };
+
+  const queueSave = (): void => {
+    saveState.textContent = '保存中…';
+    if (saveTimer !== null) window.clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(async () => {
+      await store.saveProfileDraft(draft);
+      saveState.textContent = 'IndexedDBへ保存済み';
+      saveTimer = null;
+    }, 350);
+  };
+
   for (const def of FIELD_DEFS) {
     const label = document.createElement('label');
     label.textContent = def.label;
@@ -117,25 +137,6 @@ export async function mountProfileEditor(options: EditorOptions): Promise<() => 
     label.appendChild(control);
     form.appendChild(label);
   }
-
-  const applyField = (key: keyof OshiProfileDraft, value: string): void => {
-    if (key === 'visibility') {
-      draft = { ...draft, visibility: value as Visibility };
-      return;
-    }
-    if (key === 'schemaVersion' || key === 'updatedAt') return;
-    draft = { ...draft, [key]: value };
-  };
-
-  const queueSave = (): void => {
-    saveState.textContent = '保存中…';
-    if (saveTimer !== null) window.clearTimeout(saveTimer);
-    saveTimer = window.setTimeout(async () => {
-      await store.saveProfileDraft(draft);
-      saveState.textContent = 'IndexedDBへ保存済み';
-      saveTimer = null;
-    }, 350);
-  };
 
   const updatePreview = (): HTMLCanvasElement => {
     latestCard = renderProfileCard(draft, options.characterCanvas, { themeId: draft.themeId });
