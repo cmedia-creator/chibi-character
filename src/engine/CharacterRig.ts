@@ -56,12 +56,16 @@ export class CharacterRig {
     return rig;
   }
 
+  get isBusy(): boolean {
+    return this.motionPlayer.isBusy;
+  }
+
   onTap(handler: () => void): void {
     this.root.on('pointertap', handler);
   }
 
-  play(id: string): Promise<void> {
-    return this.motionPlayer.play(id);
+  play(id: string, options: { interrupt?: boolean } = {}): Promise<void> {
+    return this.motionPlayer.play(id, options);
   }
 
   blinkNow(): Promise<void> {
