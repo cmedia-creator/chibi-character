@@ -19,6 +19,18 @@ CREATE TABLE passkey_credentials (
 CREATE INDEX idx_passkey_credentials_user
   ON passkey_credentials(user_id);
 
+CREATE TABLE webauthn_challenges (
+  challenge_hash TEXT PRIMARY KEY,
+  user_id TEXT,
+  purpose TEXT NOT NULL CHECK (purpose IN ('register', 'authenticate')),
+  expires_at INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_webauthn_challenges_expires
+  ON webauthn_challenges(expires_at);
+
 CREATE TABLE sessions (
   id_hash TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -65,6 +77,7 @@ CREATE TABLE profiles (
   theme_id TEXT NOT NULL DEFAULT 'simple',
   visibility TEXT NOT NULL DEFAULT 'private'
     CHECK (visibility IN ('private', 'unlisted', 'public')),
+  schema_version INTEGER NOT NULL DEFAULT 1,
   updated_at INTEGER NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
