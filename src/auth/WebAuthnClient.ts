@@ -1,4 +1,4 @@
-import { base64UrlToBytes, bytesToBase64Url } from './base64url';
+import { base64UrlToArrayBuffer, bytesToBase64Url } from './base64url';
 import type { AuthenticationCredentialPayload, RegistrationCredentialPayload } from './types';
 
 export interface RegistrationOptionsJson {
@@ -25,11 +25,11 @@ export async function createPasskey(options: RegistrationOptionsJson): Promise<R
   const credential = await navigator.credentials.create({
     publicKey: {
       ...options,
-      challenge: base64UrlToBytes(options.challenge),
-      user: { ...options.user, id: base64UrlToBytes(options.user.id) },
+      challenge: base64UrlToArrayBuffer(options.challenge),
+      user: { ...options.user, id: base64UrlToArrayBuffer(options.user.id) },
       excludeCredentials: options.excludeCredentials?.map((item) => ({
         ...item,
-        id: base64UrlToBytes(item.id),
+        id: base64UrlToArrayBuffer(item.id),
       })),
     },
   });
@@ -55,10 +55,10 @@ export async function getPasskey(options: AuthenticationOptionsJson): Promise<Au
   const credential = await navigator.credentials.get({
     publicKey: {
       ...options,
-      challenge: base64UrlToBytes(options.challenge),
+      challenge: base64UrlToArrayBuffer(options.challenge),
       allowCredentials: options.allowCredentials?.map((item) => ({
         ...item,
-        id: base64UrlToBytes(item.id),
+        id: base64UrlToArrayBuffer(item.id),
       })),
     },
   });
