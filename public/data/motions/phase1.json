@@ -2,16 +2,17 @@
   "motions": [
     {
       "id": "motion.wave.001",
-      "duration": 1280,
+      "duration": 1500,
       "bone": "arm_R",
       "keyframes": [
         { "t": 0, "rotation": 0, "ease": "easeOut" },
-        { "t": 180, "rotation": -72, "ease": "easeOut" },
-        { "t": 360, "rotation": -42, "ease": "easeInOut" },
-        { "t": 540, "rotation": -76, "ease": "easeInOut" },
-        { "t": 720, "rotation": -42, "ease": "easeInOut" },
-        { "t": 900, "rotation": -72, "ease": "easeInOut" },
-        { "t": 1280, "rotation": 0, "ease": "easeInOut" }
+        { "t": 260, "rotation": -118, "ease": "easeOut" },
+        { "t": 470, "rotation": -136, "ease": "easeInOut" },
+        { "t": 650, "rotation": -116, "ease": "easeInOut" },
+        { "t": 830, "rotation": -136, "ease": "easeInOut" },
+        { "t": 1010, "rotation": -116, "ease": "easeInOut" },
+        { "t": 1190, "rotation": -132, "ease": "easeInOut" },
+        { "t": 1500, "rotation": 0, "ease": "easeInOut" }
       ]
     }
   ]
