@@ -1,0 +1,18 @@
+{
+  "motions": [
+    {
+      "id": "motion.wave.001",
+      "duration": 1280,
+      "bone": "arm_R",
+      "keyframes": [
+        { "t": 0, "rotation": 0, "ease": "easeOut" },
+        { "t": 180, "rotation": -72, "ease": "easeOut" },
+        { "t": 360, "rotation": -42, "ease": "easeInOut" },
+        { "t": 540, "rotation": -76, "ease": "easeInOut" },
+        { "t": 720, "rotation": -42, "ease": "easeInOut" },
+        { "t": 900, "rotation": -72, "ease": "easeInOut" },
+        { "t": 1280, "rotation": 0, "ease": "easeInOut" }
+      ]
+    }
+  ]
+}
