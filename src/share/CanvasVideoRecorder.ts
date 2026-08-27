@@ -22,10 +22,10 @@ export async function recordChibiVideo(
   const durationMs = options.durationMs ?? 4_000;
   const fps = options.fps ?? 30;
   const output = renderChibiCard(source, options.card);
-  const capture = output.captureStream?.bind(output);
-  if (!capture) throw new Error('Canvas captureStream is not supported.');
+  const captureStream = output.captureStream?.bind(output);
+  if (!captureStream) throw new Error('Canvas captureStream is not supported.');
 
-  const stream = capture(fps);
+  const stream = captureStream(fps);
   const mimeType = pickMimeType();
   const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
   const chunks: BlobPart[] = [];
@@ -36,7 +36,7 @@ export async function recordChibiVideo(
 
   const stopped = new Promise<void>((resolve, reject) => {
     recorder.addEventListener('stop', () => resolve(), { once: true });
-    recorder.addEventListener('error', () => reject(recorder.error ?? new Error('Recording failed.')), { once: true });
+    recorder.addEventListener('error', () => reject(new Error('Recording failed.')), { once: true });
   });
 
   let raf = 0;
