@@ -1,1 +1,90 @@
-{"id":"character.test-01","schemaVersion":1,"root":{"x":512,"y":920,"scale":0.82},"bones":[{"name":"body","x":0,"y":0,"zIndex":40},{"name":"arm_L","x":-148,"y":-405,"zIndex":75},{"name":"arm_R","x":148,"y":-405,"zIndex":85},{"name":"head","x":0,"y":-640,"zIndex":100}],"parts":[{"id":"test.hair.back","slot":"hair_back","bone":"body","asset":"data:image/webp;base64,UklGRvA+...TRUNCATED...","x":0,"y":-520,"width":560,"height":720,"anchorX":0.5,"anchorY":0.5,"zIndex":1}]}
+{
+  "id": "character.test-01",
+  "schemaVersion": 1,
+  "root": { "x": 512, "y": 920, "scale": 0.82 },
+  "bones": [
+    { "name": "body", "x": 0, "y": 0, "zIndex": 40 },
+    { "name": "arm_L", "x": -148, "y": -405, "zIndex": 75 },
+    { "name": "arm_R", "x": 148, "y": -405, "zIndex": 85 },
+    { "name": "head", "x": 0, "y": -640, "zIndex": 100 }
+  ],
+  "parts": [
+    {
+      "id": "test.hair.back", "slot": "hair_back", "bone": "body",
+      "asset": "/test-character-01-atlas.webp",
+      "frame": { "x": 22, "y": 4, "width": 115, "height": 152 },
+      "x": 0, "y": -520, "width": 560, "height": 720,
+      "anchorX": 0.5, "anchorY": 0.5, "zIndex": 1
+    },
+    {
+      "id": "test.leg.left", "slot": "leg_L", "bone": "body",
+      "asset": "/test-character-01-atlas.webp",
+      "frame": { "x": 201, "y": 324, "width": 77, "height": 152 },
+      "x": -68, "y": -2, "width": 130, "height": 365,
+      "anchorX": 0.5, "anchorY": 1, "zIndex": 10
+    },
+    {
+      "id": "test.leg.right", "slot": "leg_R", "bone": "body",
+      "asset": "/test-character-01-atlas.webp",
+      "frame": { "x": 365, "y": 324, "width": 70, "height": 152 },
+      "x": 68, "y": -2, "width": 130, "height": 365,
+      "anchorX": 0.5, "anchorY": 1, "zIndex": 11
+    },
+    {
+      "id": "test.torso", "slot": "torso", "bone": "body",
+      "asset": "/test-character-01-atlas.webp",
+      "frame": { "x": 336, "y": 164, "width": 127, "height": 152 },
+      "x": 0, "y": -355, "width": 380, "height": 365,
+      "anchorX": 0.5, "anchorY": 0.5, "zIndex": 30
+    },
+    {
+      "id": "test.arm.left", "slot": "arm_L", "bone": "arm_L",
+      "asset": "/test-character-01-atlas.webp",
+      "frame": { "x": 522, "y": 164, "width": 76, "height": 152 },
+      "x": 0, "y": 0, "width": 112, "height": 310,
+      "anchorX": 0.5, "anchorY": 0.08, "zIndex": 10
+    },
+    {
+      "id": "test.arm.right", "slot": "arm_R", "bone": "arm_R",
+      "asset": "/test-character-01-atlas.webp",
+      "frame": { "x": 41, "y": 324, "width": 77, "height": 152 },
+      "x": 0, "y": 0, "width": 112, "height": 310,
+      "anchorX": 0.5, "anchorY": 0.08, "zIndex": 10
+    },
+    {
+      "id": "test.head.base", "slot": "face", "bone": "head",
+      "asset": "/test-character-01-atlas.webp",
+      "frame": { "x": 169, "y": 4, "width": 142, "height": 152 },
+      "x": 0, "y": 0, "width": 410, "height": 430,
+      "anchorX": 0.5, "anchorY": 0.5, "zIndex": 10
+    },
+    {
+      "id": "test.eyes.open", "slot": "eyes_open", "bone": "head",
+      "asset": "/test-character-01-atlas.webp",
+      "frame": { "x": 324, "y": 4, "width": 152, "height": 152 },
+      "x": 0, "y": 20, "width": 245, "height": 105,
+      "anchorX": 0.5, "anchorY": 0.5, "zIndex": 20
+    },
+    {
+      "id": "test.eyes.closed", "slot": "eyes_closed", "bone": "head",
+      "asset": "/test-character-01-atlas.webp",
+      "frame": { "x": 485, "y": 4, "width": 149, "height": 152 },
+      "x": 0, "y": 20, "width": 245, "height": 105,
+      "anchorX": 0.5, "anchorY": 0.5, "zIndex": 21, "visible": false
+    },
+    {
+      "id": "test.mouth", "slot": "mouth", "bone": "head",
+      "asset": "/test-character-01-atlas.webp",
+      "frame": { "x": 4, "y": 164, "width": 152, "height": 152 },
+      "x": 0, "y": 105, "width": 80, "height": 30,
+      "anchorX": 0.5, "anchorY": 0.5, "zIndex": 25
+    },
+    {
+      "id": "test.hair.front", "slot": "hair_front", "bone": "head",
+      "asset": "/test-character-01-atlas.webp",
+      "frame": { "x": 176, "y": 164, "width": 128, "height": 152 },
+      "x": 0, "y": 70, "width": 510, "height": 625,
+      "anchorX": 0.5, "anchorY": 0.5, "zIndex": 40
+    }
+  ]
+}
