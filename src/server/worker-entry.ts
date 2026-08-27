@@ -1,3 +1,4 @@
+import { AuthHttpApp } from './AuthHttpApp';
 import { D1Repository } from './D1Repository';
 import { ServerApp } from './App';
 import type { WorkerBindings } from './cloudflare';
@@ -11,6 +12,11 @@ const worker = {
       if (!env.DB) {
         return jsonError(503, 'internal_error', 'Database binding is not configured.');
       }
+
+      if (url.pathname.startsWith('/api/auth/')) {
+        return new AuthHttpApp(env.DB, env.TURNSTILE_SECRET).handle(request);
+      }
+
       return new ServerApp(new D1Repository(env.DB)).handle(request);
     }
 
