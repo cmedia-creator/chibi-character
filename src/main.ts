@@ -4,6 +4,7 @@ import { AtlasCharacterRig } from './engine/AtlasCharacterRig';
 import { BehaviorController, type BehaviorState } from './engine/BehaviorController';
 import { CharacterRig } from './engine/CharacterRig';
 import { mountCharacterInspector } from './debug/CharacterInspector';
+import { mountProfileEditor } from './profile/ProfileEditor';
 
 const WORLD_SIZE = 1024;
 
@@ -134,9 +135,15 @@ if (params.has('inspect') && rig instanceof AtlasCharacterRig) {
   unmountInspector = mountCharacterInspector(rig);
 }
 
+let unmountProfile: (() => void) | null = null;
+if (params.has('profile')) {
+  unmountProfile = await mountProfileEditor({ characterCanvas: app.canvas });
+}
+
 window.addEventListener('beforeunload', () => {
   resizeObserver.disconnect();
   unmountInspector?.();
+  unmountProfile?.();
   rig.destroy();
   app.destroy(true);
 });
