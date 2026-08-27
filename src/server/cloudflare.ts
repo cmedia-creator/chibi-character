@@ -20,7 +20,15 @@ export interface FetcherBinding {
   fetch(request: Request): Promise<Response>;
 }
 
+export interface R2BucketBinding {
+  get(key: string): Promise<unknown>;
+  put(key: string, value: ReadableStream | ArrayBuffer | ArrayBufferView | string | Blob, options?: unknown): Promise<unknown>;
+  delete(key: string): Promise<void>;
+}
+
 export interface WorkerBindings {
   DB?: D1Database;
   ASSETS?: FetcherBinding;
+  SHARE_ASSETS?: R2BucketBinding;
+  TURNSTILE_SECRET?: string;
 }
