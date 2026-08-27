@@ -19,5 +19,7 @@ jobs:
           package-manager-cache: false
       - name: Install dependencies
         run: npm install
+      - name: Validate character data
+        run: npm run validate:data
       - name: Build
         run: npm run build
