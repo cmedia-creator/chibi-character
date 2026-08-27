@@ -62,6 +62,10 @@ export class AtlasCharacterRig {
     return this.motionPlayer.isBusy;
   }
 
+  canPlay(id: string): boolean {
+    return this.motionPlayer.canPlay(id);
+  }
+
   onTap(handler: () => void): void {
     this.root.on('pointertap', handler);
   }
