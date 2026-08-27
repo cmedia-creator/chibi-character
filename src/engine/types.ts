@@ -7,11 +7,19 @@ export interface BoneDefinition {
   zIndex: number;
 }
 
+export interface TextureFrameDefinition {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface PartDefinition {
   id: string;
   slot: string;
   bone: BoneName;
   asset: string;
+  frame?: TextureFrameDefinition;
   x: number;
   y: number;
   width: number;
