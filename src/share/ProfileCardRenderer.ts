@@ -8,6 +8,8 @@ type ShareTheme = {
   accent: string;
 };
 
+type CharacterImageSource = HTMLCanvasElement | HTMLImageElement | HTMLVideoElement;
+
 const THEMES: Record<string, ShareTheme> = {
   simple: {
     background: '#f7f4fa',
@@ -47,7 +49,7 @@ export interface ProfileCardOptions {
 
 export function renderProfileCard(
   profile: OshiProfileDraft,
-  characterCanvas: CanvasImageSource | null,
+  characterCanvas: CharacterImageSource | null,
   options: ProfileCardOptions = {},
 ): HTMLCanvasElement {
   const width = options.width ?? 1080;
@@ -94,7 +96,7 @@ export function renderProfileCard(
   fieldY = drawField(ctx, theme, '推し歴', profile.oshiSince, fieldX, fieldY, 430);
   fieldY = drawField(ctx, theme, '好きな曲', profile.favoriteSong, fieldX, fieldY, 430);
   fieldY = drawField(ctx, theme, '好きなところ', profile.favoritePoint, fieldX, fieldY, 430);
-  fieldY = drawField(ctx, theme, '同担スタンス', profile.doufanStance, fieldX, fieldY, 430);
+  drawField(ctx, theme, '同担スタンス', profile.doufanStance, fieldX, fieldY, 430);
 
   const lowerY = 850;
   drawRoundedPanel(ctx, 100, lowerY, width - 200, 360, 30, theme.background);
@@ -188,14 +190,25 @@ function wrapLines(
 
 function drawContainedImage(
   ctx: CanvasRenderingContext2D,
-  image: CanvasImageSource,
+  image: CharacterImageSource,
   x: number,
   y: number,
   width: number,
   height: number,
 ): void {
-  const sourceWidth = 'videoWidth' in image ? image.videoWidth : 'naturalWidth' in image ? image.naturalWidth : image.width;
-  const sourceHeight = 'videoHeight' in image ? image.videoHeight : 'naturalHeight' in image ? image.naturalHeight : image.height;
+  let sourceWidth: number;
+  let sourceHeight: number;
+  if (image instanceof HTMLVideoElement) {
+    sourceWidth = image.videoWidth;
+    sourceHeight = image.videoHeight;
+  } else if (image instanceof HTMLImageElement) {
+    sourceWidth = image.naturalWidth;
+    sourceHeight = image.naturalHeight;
+  } else {
+    sourceWidth = image.width;
+    sourceHeight = image.height;
+  }
+  if (sourceWidth <= 0 || sourceHeight <= 0) return;
   const scale = Math.min(width / sourceWidth, height / sourceHeight);
   const drawWidth = sourceWidth * scale;
   const drawHeight = sourceHeight * scale;
