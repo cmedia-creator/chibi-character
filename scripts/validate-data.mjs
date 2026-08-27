@@ -5,7 +5,9 @@ import process from 'node:process';
 const ROOT = process.cwd();
 const CHARACTER_DIR = path.join(ROOT, 'public', 'data', 'characters');
 const MOTION_FILE = path.join(ROOT, 'public', 'data', 'motions', 'phase1.json');
+const CATALOG_FILE = path.join(ROOT, 'public', 'data', 'catalog', 'parts.json');
 const TRANSFORM_KEYS = ['rotation', 'x', 'y', 'scaleX', 'scaleY', 'alpha'];
+const CATALOG_CATEGORIES = new Set(['face', 'eyes', 'hair', 'outfit', 'accessory']);
 
 const errors = [];
 const notes = [];
@@ -20,6 +22,15 @@ async function loadJson(file) {
     fail(path.relative(ROOT, file), `invalid JSON (${error.message})`);
     return null;
   }
+}
+
+function validateFrame(scope, frame) {
+  if (!frame || typeof frame !== 'object') return;
+  for (const key of ['x', 'y', 'width', 'height']) {
+    if (!finite(frame[key])) fail(scope, `frame.${key} must be a finite number`);
+  }
+  if (finite(frame.width) && frame.width <= 0) fail(scope, 'frame.width must be > 0');
+  if (finite(frame.height) && frame.height <= 0) fail(scope, 'frame.height must be > 0');
 }
 
 function validateCharacter(fileName, data) {
@@ -65,13 +76,7 @@ function validateCharacter(fileName, data) {
     }
     if (finite(part.width) && part.width <= 0) fail(partScope, 'width must be > 0');
     if (finite(part.height) && part.height <= 0) fail(partScope, 'height must be > 0');
-    if (part.frame) {
-      for (const key of ['x', 'y', 'width', 'height']) {
-        if (!finite(part.frame[key])) fail(partScope, `frame.${key} must be a finite number`);
-      }
-      if (finite(part.frame.width) && part.frame.width <= 0) fail(partScope, 'frame.width must be > 0');
-      if (finite(part.frame.height) && part.frame.height <= 0) fail(partScope, 'frame.height must be > 0');
-    }
+    validateFrame(partScope, part.frame);
   }
 
   if (!slots.has('eyes_open') || !slots.has('eyes_closed')) {
@@ -81,9 +86,7 @@ function validateCharacter(fileName, data) {
 
 function normalizeTracks(motion) {
   if (Array.isArray(motion.tracks)) return motion.tracks;
-  if (motion.bone && Array.isArray(motion.keyframes)) {
-    return [{ bone: motion.bone, keyframes: motion.keyframes }];
-  }
+  if (motion.bone && Array.isArray(motion.keyframes)) return [{ bone: motion.bone, keyframes: motion.keyframes }];
   return [];
 }
 
@@ -104,7 +107,6 @@ function validateMotionCatalog(data, knownBones) {
 
     const tracks = normalizeTracks(motion);
     if (tracks.length === 0) fail(motionScope, 'at least one motion track is required');
-
     for (const [trackIndex, track] of tracks.entries()) {
       const trackScope = `${motionScope} track[${trackIndex}]`;
       if (!knownBones.has(track.bone)) fail(trackScope, `unknown bone ${String(track.bone)}`);
@@ -112,7 +114,6 @@ function validateMotionCatalog(data, knownBones) {
         fail(trackScope, 'keyframes must be a non-empty array');
         continue;
       }
-
       let previousT = -Infinity;
       for (const [frameIndex, frame] of track.keyframes.entries()) {
         const frameScope = `${trackScope} keyframe[${frameIndex}]`;
@@ -130,6 +131,45 @@ function validateMotionCatalog(data, knownBones) {
   }
 }
 
+function validateCatalog(data) {
+  const scope = 'catalog/parts.json';
+  if (!data || !Array.isArray(data.bundles) || !Array.isArray(data.packs)) {
+    fail(scope, 'bundles and packs must be arrays');
+    return;
+  }
+
+  const packIds = new Set();
+  for (const [index, pack] of data.packs.entries()) {
+    const packScope = `${scope} pack[${index}]`;
+    if (typeof pack.id !== 'string' || !pack.id) fail(packScope, 'id is required');
+    if (packIds.has(pack.id)) fail(packScope, `duplicate pack id ${pack.id}`);
+    packIds.add(pack.id);
+    if (typeof pack.name !== 'string' || !pack.name) fail(packScope, 'name is required');
+    if (!finite(pack.priceJpy) || pack.priceJpy < 0) fail(packScope, 'priceJpy must be >= 0');
+    if (typeof pack.available !== 'boolean') fail(packScope, 'available must be boolean');
+  }
+
+  const bundleIds = new Set();
+  for (const [index, bundle] of data.bundles.entries()) {
+    const bundleScope = `${scope} bundle[${index}]`;
+    if (typeof bundle.id !== 'string' || !bundle.id) fail(bundleScope, 'id is required');
+    if (bundleIds.has(bundle.id)) fail(bundleScope, `duplicate bundle id ${bundle.id}`);
+    bundleIds.add(bundle.id);
+    if (!CATALOG_CATEGORIES.has(bundle.category)) fail(bundleScope, `unknown category ${String(bundle.category)}`);
+    if (!packIds.has(bundle.packId)) fail(bundleScope, `unknown pack ${String(bundle.packId)}`);
+    if (typeof bundle.isFree !== 'boolean') fail(bundleScope, 'isFree must be boolean');
+    if (!bundle.sources || typeof bundle.sources !== 'object' || Array.isArray(bundle.sources)) {
+      fail(bundleScope, 'sources must be an object');
+      continue;
+    }
+    for (const [slot, source] of Object.entries(bundle.sources)) {
+      const sourceScope = `${bundleScope} source/${slot}`;
+      if (!source || typeof source.asset !== 'string' || !source.asset) fail(sourceScope, 'asset is required');
+      validateFrame(sourceScope, source?.frame);
+    }
+  }
+}
+
 const files = (await readdir(CHARACTER_DIR)).filter((name) => name.endsWith('.json')).sort();
 const allBones = new Set();
 for (const fileName of files) {
@@ -140,6 +180,8 @@ for (const fileName of files) {
 
 const motions = await loadJson(MOTION_FILE);
 validateMotionCatalog(motions, allBones);
+const catalog = await loadJson(CATALOG_FILE);
+validateCatalog(catalog);
 
 for (const note of notes) console.log(`NOTE ${note}`);
 if (errors.length) {
@@ -148,4 +190,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Validated ${files.length} character definition(s) and ${motions?.motions?.length ?? 0} motion(s).`);
+console.log(`Validated ${files.length} character definition(s), ${motions?.motions?.length ?? 0} motion(s), ${catalog?.bundles?.length ?? 0} catalog bundle(s), and ${catalog?.packs?.length ?? 0} pack(s).`);
