@@ -4,7 +4,7 @@ export interface StoredPasskeyCredential {
   id: string;
   userId: string;
   credentialId: string;
-  publicKey: Uint8Array;
+  publicKey: Uint8Array<ArrayBuffer>;
   signCount: number;
   transports: string[];
   createdAt: number;
