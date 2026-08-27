@@ -1,5 +1,6 @@
 import { Assets, Container, Rectangle, Sprite } from 'pixi.js';
 import type { Texture } from 'pixi.js';
+import { buildBones } from './buildBones';
 import { MotionPlayer } from './MotionPlayer';
 import type { BoneName, CharacterDefinition, MotionCatalog, MotionDefinition } from './types';
 
@@ -22,14 +23,8 @@ export class CharacterRig {
     this.root.eventMode = 'static';
     this.root.hitArea = new Rectangle(-245, -900, 490, 920);
 
-    for (const boneDef of definition.bones) {
-      const bone = new Container();
-      bone.label = boneDef.name;
-      bone.position.set(boneDef.x, boneDef.y);
-      bone.zIndex = boneDef.zIndex;
-      bone.sortableChildren = true;
-      this.bones.set(boneDef.name, bone);
-      this.root.addChild(bone);
+    for (const [name, bone] of buildBones(this.root, definition.bones)) {
+      this.bones.set(name, bone);
     }
 
     const motions = new Map<string, MotionDefinition>(
