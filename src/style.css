@@ -9,7 +9,7 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; min-width: 320px; min-height: 100%; background: #0d0c13; }
 body { min-height: 100vh; overflow-x: hidden; }
-button { font: inherit; }
+button, input, select, textarea { font: inherit; }
 
 .app-shell {
   width: min(100%, 780px);
@@ -99,12 +99,51 @@ h1 { margin: 0; font-size: clamp(26px, 7vw, 42px); letter-spacing: -.03em; }
 .controls button:active { transform: translateY(1px); }
 .controls p { margin: 0; font-size: 12px; line-height: 1.7; color: #9b96a6; }
 
+.character-inspector {
+  position: fixed;
+  z-index: 50;
+  top: max(12px, env(safe-area-inset-top));
+  right: 12px;
+  width: min(320px, calc(100vw - 24px));
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 18px;
+  background: rgba(18,16,26,.94);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 20px 70px rgba(0,0,0,.5);
+  color: #f6f1fa;
+}
+.character-inspector label { display: grid; gap: 5px; margin-top: 10px; font-size: 11px; color: #aaa3b6; }
+.character-inspector input,
+.character-inspector select,
+.character-inspector textarea,
+.character-inspector button {
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 10px;
+  background: #24202e;
+  color: #f7f2fb;
+}
+.character-inspector input,
+.character-inspector select { min-height: 36px; padding: 6px 8px; }
+.character-inspector textarea { width: 100%; min-height: 116px; margin-top: 10px; padding: 8px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; }
+.inspector-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.inspector-head div { display: grid; gap: 2px; }
+.inspector-head small { font-size: 9px; letter-spacing: .16em; color: #8f879a; }
+.inspector-head strong { font-size: 15px; }
+.inspector-head button { width: 32px; height: 32px; cursor: pointer; }
+.inspector-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.inspector-check { display: flex !important; align-items: center; grid-template-columns: auto 1fr; }
+.inspector-check input { min-height: 0; }
+.inspector-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.inspector-actions button { min-height: 38px; cursor: pointer; }
+
 @media (max-width: 480px) {
   .app-shell { padding-left: 12px; padding-right: 12px; }
   .topbar { gap: 10px; }
   .badge { font-size: 10px; padding: 6px 8px; }
   .stage-card { border-radius: 22px; }
   .stage-copy { left: 16px; right: 16px; bottom: 14px; }
+  .character-inspector { max-height: calc(100vh - 24px); overflow: auto; }
 }
 
 @media (max-width: 360px) {
