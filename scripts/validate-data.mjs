@@ -33,6 +33,32 @@ function validateFrame(scope, frame) {
   if (finite(frame.height) && frame.height <= 0) fail(scope, 'frame.height must be > 0');
 }
 
+function validateBoneHierarchy(scope, bones, boneNames) {
+  const byName = new Map(bones.map((bone) => [bone.name, bone]));
+
+  for (const [index, bone] of bones.entries()) {
+    const boneScope = `${scope} bone[${index}]`;
+    if (bone.parent !== undefined) {
+      if (typeof bone.parent !== 'string' || !bone.parent) fail(boneScope, 'parent must be a non-empty bone name');
+      else if (!boneNames.has(bone.parent)) fail(boneScope, `unknown parent bone ${bone.parent}`);
+      else if (bone.parent === bone.name) fail(boneScope, 'bone cannot parent itself');
+    }
+  }
+
+  for (const bone of bones) {
+    const seen = new Set();
+    let current = bone.name;
+    while (current) {
+      if (seen.has(current)) {
+        fail(scope, `bone parent cycle detected at ${current}`);
+        break;
+      }
+      seen.add(current);
+      current = byName.get(current)?.parent;
+    }
+  }
+}
+
 function validateCharacter(fileName, data) {
   const scope = `character/${fileName}`;
   if (!data || typeof data !== 'object') return;
@@ -56,6 +82,7 @@ function validateCharacter(fileName, data) {
       if (!finite(bone[key])) fail(boneScope, `${key} must be a finite number`);
     }
   }
+  validateBoneHierarchy(scope, data.bones, boneNames);
 
   if (!Array.isArray(data.parts) || data.parts.length === 0) {
     fail(scope, 'parts must be a non-empty array');

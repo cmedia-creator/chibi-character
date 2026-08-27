@@ -1,4 +1,5 @@
 import { Assets, Container, Rectangle, Sprite, Texture } from 'pixi.js';
+import { buildBones } from './buildBones';
 import { MotionPlayer } from './MotionPlayer';
 import type {
   BoneName,
@@ -29,14 +30,8 @@ export class AtlasCharacterRig {
     this.root.eventMode = 'static';
     this.root.hitArea = new Rectangle(-260, -930, 520, 950);
 
-    for (const boneDef of definition.bones) {
-      const bone = new Container();
-      bone.label = boneDef.name;
-      bone.position.set(boneDef.x, boneDef.y);
-      bone.zIndex = boneDef.zIndex;
-      bone.sortableChildren = true;
-      this.bones.set(boneDef.name, bone);
-      this.root.addChild(bone);
+    for (const [name, bone] of buildBones(this.root, definition.bones)) {
+      this.bones.set(name, bone);
     }
 
     const motions = new Map<string, MotionDefinition>(
@@ -65,6 +60,10 @@ export class AtlasCharacterRig {
 
   get isBusy(): boolean {
     return this.motionPlayer.isBusy;
+  }
+
+  canPlay(id: string): boolean {
+    return this.motionPlayer.canPlay(id);
   }
 
   onTap(handler: () => void): void {

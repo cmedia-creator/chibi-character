@@ -1,7 +1,8 @@
-export type BoneName = 'body' | 'arm_L' | 'arm_R' | 'head' | 'leg_L' | 'leg_R';
+export type BoneName = 'pelvis' | 'body' | 'arm_L' | 'arm_R' | 'head' | 'leg_L' | 'leg_R';
 
 export interface BoneDefinition {
   name: BoneName;
+  parent?: BoneName;
   x: number;
   y: number;
   zIndex: number;

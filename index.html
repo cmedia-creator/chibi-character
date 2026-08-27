@@ -27,12 +27,15 @@
         </div>
       </section>
 
-      <section class="controls" aria-label="Gate 1 controls">
+      <section class="controls" aria-label="Phase 1 motion controls">
         <div class="control-grid">
-          <button type="button" id="blink-button">瞬きテスト</button>
-          <button type="button" id="wave-button">手を振るテスト</button>
+          <button type="button" id="blink-button">瞬き</button>
+          <button type="button" id="wave-button">手を振る</button>
+          <button type="button" id="heart-button">ハート</button>
+          <button type="button" id="walk-button">歩く</button>
+          <button type="button" id="sit-button">座る</button>
         </div>
-        <p>正式テストキャラ01の仮組み版です。idle は常時自動、blink は自動＋手動、wave はボタンまたはキャラタップで確認できます。見た目のズレはこの表示を見てまとめて修正します。</p>
+        <p>idle / blink / look / sway / walk / sit / heart は端末内で処理します。自律行動は一定間隔で発生し、キャラタップでは挨拶、連続タップでは反応が変わります。</p>
       </section>
     </main>
     <script type="module" src="/src/main.ts"></script>

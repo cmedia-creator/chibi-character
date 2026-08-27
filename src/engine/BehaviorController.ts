@@ -1,12 +1,38 @@
 type BehaviorRig = {
   readonly isBusy: boolean;
+  canPlay(id: string): boolean;
   play(id: string, options?: { interrupt?: boolean }): Promise<void>;
   blinkNow(): Promise<void>;
 };
 
-export type BehaviorState = 'idle' | 'look' | 'sway' | 'greet' | 'curious';
+export type BehaviorState =
+  | 'idle'
+  | 'look'
+  | 'sway'
+  | 'greet'
+  | 'curious'
+  | 'walk'
+  | 'sit'
+  | 'heart';
 
 type StateListener = (state: BehaviorState) => void;
+
+type AmbientChoice = {
+  state: BehaviorState;
+  motionId: string;
+  weight: number;
+};
+
+const AMBIENT_CHOICES: AmbientChoice[] = [
+  { state: 'look', motionId: 'motion.look.left.001', weight: 18 },
+  { state: 'look', motionId: 'motion.look.right.001', weight: 18 },
+  { state: 'curious', motionId: 'motion.curious.001', weight: 16 },
+  { state: 'sway', motionId: 'motion.sway.001', weight: 20 },
+  { state: 'walk', motionId: 'motion.walk.inplace.001', weight: 12 },
+  { state: 'sit', motionId: 'motion.sit.001', weight: 9 },
+  { state: 'heart', motionId: 'motion.heart.001', weight: 5 },
+  { state: 'greet', motionId: 'motion.wave.001', weight: 2 },
+];
 
 export class BehaviorController {
   private elapsed = 0;
@@ -40,7 +66,7 @@ export class BehaviorController {
     this.lastTapAt = now;
     this.resetTimer();
 
-    if (this.tapCount >= 3) {
+    if (this.tapCount >= 3 && this.rig.canPlay('motion.curious.001')) {
       this.onState('curious');
       await this.rig.play('motion.curious.001', { interrupt: true });
       this.onState('idle');
@@ -48,13 +74,14 @@ export class BehaviorController {
       return;
     }
 
+    if (!this.rig.canPlay('motion.wave.001')) return;
     this.onState('greet');
     await this.rig.play('motion.wave.001', { interrupt: true });
     this.onState('idle');
   }
 
   async greetAfterAbsence(msAway: number): Promise<void> {
-    if (!this.enabled || msAway < 30_000) return;
+    if (!this.enabled || msAway < 30_000 || !this.rig.canPlay('motion.wave.001')) return;
     this.resetTimer();
     this.onState('greet');
     await this.rig.play('motion.wave.001', { interrupt: true });
@@ -62,34 +89,22 @@ export class BehaviorController {
   }
 
   private runAmbientAction(): void {
-    const roll = Math.random();
+    const available = AMBIENT_CHOICES.filter((choice) => this.rig.canPlay(choice.motionId));
+    if (available.length === 0) return;
 
-    if (roll < 0.3) {
-      this.onState('look');
-      void this.rig.play('motion.look.left.001').finally(() => this.onState('idle'));
-      return;
+    const totalWeight = available.reduce((sum, choice) => sum + choice.weight, 0);
+    let cursor = Math.random() * totalWeight;
+    let selected = available.at(-1)!;
+    for (const choice of available) {
+      cursor -= choice.weight;
+      if (cursor <= 0) {
+        selected = choice;
+        break;
+      }
     }
 
-    if (roll < 0.6) {
-      this.onState('look');
-      void this.rig.play('motion.look.right.001').finally(() => this.onState('idle'));
-      return;
-    }
-
-    if (roll < 0.82) {
-      this.onState('curious');
-      void this.rig.play('motion.curious.001').finally(() => this.onState('idle'));
-      return;
-    }
-
-    if (roll < 0.96) {
-      this.onState('sway');
-      void this.rig.play('motion.sway.001').finally(() => this.onState('idle'));
-      return;
-    }
-
-    this.onState('greet');
-    void this.rig.play('motion.wave.001').finally(() => this.onState('idle'));
+    this.onState(selected.state);
+    void this.rig.play(selected.motionId).finally(() => this.onState('idle'));
   }
 
   private resetTimer(): void {
