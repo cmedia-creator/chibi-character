@@ -1,6 +1,6 @@
 import { Application, Container } from 'pixi.js';
 import './style.css';
-import { CharacterRig } from './engine/CharacterRig';
+import { AtlasCharacterRig } from './engine/AtlasCharacterRig';
 
 const WORLD_SIZE = 1024;
 
@@ -33,8 +33,8 @@ stageHost.appendChild(app.canvas);
 const world = new Container();
 app.stage.addChild(world);
 
-const rig = await CharacterRig.create(
-  '/data/characters/debug-rig-01.json',
+const rig = await AtlasCharacterRig.create(
+  '/data/characters/test-character-01.json',
   '/data/motions/phase1.json',
 );
 world.addChild(rig.root);
@@ -42,9 +42,7 @@ world.addChild(rig.root);
 const fitWorldToStage = (): void => {
   const width = Math.max(1, stageHost.clientWidth);
   const height = Math.max(1, stageHost.clientHeight);
-
   app.renderer.resize(width, height);
-
   const scale = Math.min(width / WORLD_SIZE, height / WORLD_SIZE);
   world.scale.set(scale);
   world.position.set(
@@ -64,13 +62,13 @@ const setStatus = (message: string): void => {
 const blink = async (): Promise<void> => {
   setStatus('BLINK TEST');
   await rig.blinkNow();
-  setStatus('IDLE / BLINK ACTIVE');
+  setStatus('TEST CHARACTER ACTIVE');
 };
 
 const wave = async (): Promise<void> => {
   setStatus('WAVE TEST');
   await rig.play('motion.wave.001');
-  setStatus('IDLE / BLINK ACTIVE');
+  setStatus('TEST CHARACTER ACTIVE');
 };
 
 rig.onTap(() => {
@@ -88,7 +86,7 @@ app.ticker.add((ticker: { deltaMS: number }) => {
 });
 
 engineStatus.textContent = 'ENGINE READY';
-setStatus('IDLE / BLINK ACTIVE');
+setStatus('TEST CHARACTER ACTIVE');
 
 window.addEventListener('beforeunload', () => {
   resizeObserver.disconnect();
