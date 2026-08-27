@@ -1,0 +1,43 @@
+{
+  "id": "character.debug-rig-01",
+  "schemaVersion": 1,
+  "root": { "x": 512, "y": 900, "scale": 0.9 },
+  "bones": [
+    { "name": "body", "x": 0, "y": 0, "zIndex": 40 },
+    { "name": "arm_L", "x": -92, "y": -340, "zIndex": 50 },
+    { "name": "arm_R", "x": 92, "y": -340, "zIndex": 60 },
+    { "name": "head", "x": 0, "y": -474, "zIndex": 100 }
+  ],
+  "parts": [
+    {
+      "id": "debug.body.001", "slot": "body", "bone": "body",
+      "asset": "/assets/debug-rig/body.svg", "x": 0, "y": 0,
+      "width": 260, "height": 412, "anchorX": 0.5, "anchorY": 1, "zIndex": 10
+    },
+    {
+      "id": "debug.arm.left.001", "slot": "arm_L", "bone": "arm_L",
+      "asset": "/assets/debug-rig/arm-left.svg", "x": 0, "y": 0,
+      "width": 88, "height": 252, "anchorX": 0.5, "anchorY": 0.08, "zIndex": 10
+    },
+    {
+      "id": "debug.arm.right.001", "slot": "arm_R", "bone": "arm_R",
+      "asset": "/assets/debug-rig/arm-right.svg", "x": 0, "y": 0,
+      "width": 88, "height": 252, "anchorX": 0.5, "anchorY": 0.08, "zIndex": 10
+    },
+    {
+      "id": "debug.head.001", "slot": "face", "bone": "head",
+      "asset": "/assets/debug-rig/head.svg", "x": 0, "y": -150,
+      "width": 380, "height": 347, "anchorX": 0.5, "anchorY": 0.5, "zIndex": 20
+    },
+    {
+      "id": "debug.eyes.001.open", "slot": "eyes_open", "bone": "head",
+      "asset": "/assets/debug-rig/eyes-open.svg", "x": 0, "y": -165,
+      "width": 225, "height": 75, "anchorX": 0.5, "anchorY": 0.5, "zIndex": 30
+    },
+    {
+      "id": "debug.eyes.001.closed", "slot": "eyes_closed", "bone": "head",
+      "asset": "/assets/debug-rig/eyes-closed.svg", "x": 0, "y": -165,
+      "width": 225, "height": 75, "anchorX": 0.5, "anchorY": 0.5, "zIndex": 31, "visible": false
+    }
+  ]
+}
