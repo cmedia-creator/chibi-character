@@ -1,0 +1,128 @@
+.share-studio {
+  margin-top: 26px;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 26px;
+  background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+}
+
+.share-studio-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.share-studio h2 {
+  margin: 0;
+  font-size: clamp(24px, 6vw, 36px);
+  letter-spacing: -.03em;
+}
+
+.share-studio-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.share-options { display: grid; gap: 15px; }
+.share-options fieldset { margin: 0; padding: 0; border: 0; }
+.share-options legend,
+.share-text-field {
+  margin-bottom: 7px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  color: #aaa3b6;
+}
+
+.share-segments {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 7px;
+}
+
+.share-segments button,
+.share-actions button {
+  min-height: 40px;
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 11px;
+  background: #191620;
+  color: #aaa3b6;
+  font-size: 11px;
+  font-weight: 760;
+  cursor: pointer;
+}
+
+.share-segments button.is-active {
+  color: #1a1420;
+  background: #f5eafa;
+  border-color: transparent;
+}
+
+.share-text-field { display: grid; gap: 6px; }
+.share-text-field input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 12px;
+  background: #17151f;
+  color: #f7f3fb;
+  padding: 9px 11px;
+}
+
+.share-status {
+  margin: 0;
+  min-height: 34px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #9891a3;
+}
+
+.share-output { display: grid; gap: 10px; }
+.share-preview {
+  width: 100%;
+  min-height: 280px;
+  max-height: 620px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 18px;
+  background: #15131b;
+}
+
+.share-preview-canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 620px;
+  width: auto;
+  height: auto;
+}
+
+.share-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.share-actions button {
+  min-height: 46px;
+  background: #f7eefb;
+  color: #17131c;
+}
+.share-actions button:disabled { opacity: .45; cursor: wait; }
+
+@media (max-width: 680px) {
+  .share-studio { padding: 15px; }
+  .share-studio-grid { grid-template-columns: 1fr; }
+  .share-output { order: -1; }
+  .share-preview { max-height: 520px; }
+  .share-preview-canvas { max-height: 520px; }
+}
+
+@media (max-width: 380px) {
+  .share-actions { grid-template-columns: 1fr; }
+}

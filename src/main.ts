@@ -5,6 +5,7 @@ import { BehaviorController, type BehaviorState } from './engine/BehaviorControl
 import { CharacterRig } from './engine/CharacterRig';
 import { mountCharacterInspector } from './debug/CharacterInspector';
 import { mountProfileEditor } from './profile/ProfileEditor';
+import { mountShareStudio } from './share/ShareStudio';
 
 const WORLD_SIZE = 1024;
 
@@ -140,10 +141,19 @@ if (params.has('profile')) {
   unmountProfile = await mountProfileEditor({ characterCanvas: app.canvas });
 }
 
+let unmountShareStudio: (() => void) | null = null;
+if (params.has('share')) {
+  unmountShareStudio = mountShareStudio({
+    characterCanvas: app.canvas,
+    playMotion: (id, options) => rig.play(id, options),
+  });
+}
+
 window.addEventListener('beforeunload', () => {
   resizeObserver.disconnect();
   unmountInspector?.();
   unmountProfile?.();
+  unmountShareStudio?.();
   rig.destroy();
   app.destroy(true);
 });
