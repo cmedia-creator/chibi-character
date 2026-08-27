@@ -5,6 +5,7 @@ import { BehaviorController, type BehaviorState } from './engine/BehaviorControl
 import { CharacterRig } from './engine/CharacterRig';
 import { mountCharacterInspector } from './debug/CharacterInspector';
 import { mountProfileEditor } from './profile/ProfileEditor';
+import { mountPublicProfilePreview } from './profile/PublicProfileView';
 import { mountShareStudio } from './share/ShareStudio';
 
 const WORLD_SIZE = 1024;
@@ -149,11 +150,17 @@ if (params.has('share')) {
   });
 }
 
+let unmountPublicProfile: (() => void) | null = null;
+if (params.has('public')) {
+  unmountPublicProfile = await mountPublicProfilePreview({ characterCanvas: app.canvas });
+}
+
 window.addEventListener('beforeunload', () => {
   resizeObserver.disconnect();
   unmountInspector?.();
   unmountProfile?.();
   unmountShareStudio?.();
+  unmountPublicProfile?.();
   rig.destroy();
   app.destroy(true);
 });
