@@ -1,7 +1,9 @@
 import { Application, Container } from 'pixi.js';
 import './style.css';
 import { AtlasCharacterRig } from './engine/AtlasCharacterRig';
+import { BehaviorController, type BehaviorState } from './engine/BehaviorController';
 import { CharacterRig } from './engine/CharacterRig';
+import { mountCharacterInspector } from './debug/CharacterInspector';
 
 const WORLD_SIZE = 1024;
 
@@ -74,6 +76,18 @@ const setStatus = (message: string): void => {
   actionStatus.textContent = message;
 };
 
+const behaviorLabel = (state: BehaviorState): string => {
+  if (state === 'look') return 'LOOK AROUND';
+  if (state === 'sway') return 'IDLE SWAY';
+  if (state === 'greet') return 'WAVE / GREET';
+  if (state === 'curious') return 'CURIOUS';
+  return readyLabel();
+};
+
+const behavior = new BehaviorController(rig, (state) => setStatus(behaviorLabel(state)));
+const params = new URLSearchParams(window.location.search);
+if (params.get('auto') === '0') behavior.setEnabled(false);
+
 const blink = async (): Promise<void> => {
   setStatus('BLINK TEST');
   await rig.blinkNow();
@@ -81,13 +95,11 @@ const blink = async (): Promise<void> => {
 };
 
 const wave = async (): Promise<void> => {
-  setStatus('WAVE TEST');
-  await rig.play('motion.wave.001');
-  setStatus(readyLabel());
+  await behavior.onTap();
 };
 
 rig.onTap(() => {
-  void wave();
+  void behavior.onTap();
 });
 blinkButton.addEventListener('click', () => {
   void blink();
@@ -96,15 +108,35 @@ waveButton.addEventListener('click', () => {
   void wave();
 });
 
+let hiddenAt: number | null = null;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    hiddenAt = Date.now();
+    return;
+  }
+  if (hiddenAt !== null) {
+    const away = Date.now() - hiddenAt;
+    hiddenAt = null;
+    void behavior.greetAfterAbsence(away);
+  }
+});
+
 app.ticker.add((ticker: { deltaMS: number }) => {
   rig.update(ticker.deltaMS);
+  behavior.update(ticker.deltaMS);
 });
 
 engineStatus.textContent = 'ENGINE READY';
 setStatus(readyLabel());
 
+let unmountInspector: (() => void) | null = null;
+if (params.has('inspect') && rig instanceof AtlasCharacterRig) {
+  unmountInspector = mountCharacterInspector(rig);
+}
+
 window.addEventListener('beforeunload', () => {
   resizeObserver.disconnect();
+  unmountInspector?.();
   rig.destroy();
   app.destroy(true);
 });

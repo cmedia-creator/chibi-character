@@ -1,11 +1,18 @@
 import { Assets, Container, Rectangle, Sprite, Texture } from 'pixi.js';
 import { MotionPlayer } from './MotionPlayer';
-import type { BoneName, CharacterDefinition, MotionCatalog, MotionDefinition } from './types';
+import type {
+  BoneName,
+  CharacterDefinition,
+  MotionCatalog,
+  MotionDefinition,
+  PartDebugState,
+} from './types';
 
 export class AtlasCharacterRig {
   readonly root = new Container();
   private readonly bones = new Map<string, Container>();
   private readonly slots = new Map<string, Sprite>();
+  private readonly defaults = new Map<string, PartDebugState>();
   private readonly motionPlayer: MotionPlayer;
   private blinkTimer: number | null = null;
   private elapsedSeconds = 0;
@@ -55,16 +62,49 @@ export class AtlasCharacterRig {
     return rig;
   }
 
+  get isBusy(): boolean {
+    return this.motionPlayer.isBusy;
+  }
+
   onTap(handler: () => void): void {
     this.root.on('pointertap', handler);
   }
 
-  play(id: string): Promise<void> {
-    return this.motionPlayer.play(id);
+  play(id: string, options: { interrupt?: boolean } = {}): Promise<void> {
+    return this.motionPlayer.play(id, options);
   }
 
   blinkNow(): Promise<void> {
     return this.blink();
+  }
+
+  getPartDebugStates(): PartDebugState[] {
+    return [...this.slots.entries()].map(([slot, sprite]) => ({
+      slot,
+      x: Math.round(sprite.x * 100) / 100,
+      y: Math.round(sprite.y * 100) / 100,
+      width: Math.round(sprite.width * 100) / 100,
+      height: Math.round(sprite.height * 100) / 100,
+      rotation: Math.round(sprite.angle * 100) / 100,
+      visible: sprite.visible,
+    }));
+  }
+
+  setPartDebugState(slot: string, patch: Partial<Omit<PartDebugState, 'slot'>>): void {
+    const sprite = this.slots.get(slot);
+    if (!sprite) return;
+    if (patch.x !== undefined) sprite.x = patch.x;
+    if (patch.y !== undefined) sprite.y = patch.y;
+    if (patch.width !== undefined) sprite.width = Math.max(1, patch.width);
+    if (patch.height !== undefined) sprite.height = Math.max(1, patch.height);
+    if (patch.rotation !== undefined) sprite.angle = patch.rotation;
+    if (patch.visible !== undefined) sprite.visible = patch.visible;
+  }
+
+  resetPartDebugState(slot: string): void {
+    const state = this.defaults.get(slot);
+    if (!state) return;
+    this.setPartDebugState(slot, state);
   }
 
   update(deltaMS: number): void {
@@ -106,6 +146,15 @@ export class AtlasCharacterRig {
       sprite.visible = part.visible ?? true;
       this.requireBone(part.bone).addChild(sprite);
       this.slots.set(part.slot, sprite);
+      this.defaults.set(part.slot, {
+        slot: part.slot,
+        x: part.x,
+        y: part.y,
+        width: part.width,
+        height: part.height,
+        rotation: 0,
+        visible: part.visible ?? true,
+      });
     }
 
     for (const bone of this.bones.values()) bone.sortChildren();

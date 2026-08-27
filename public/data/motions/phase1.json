@@ -3,16 +3,125 @@
     {
       "id": "motion.wave.001",
       "duration": 1500,
-      "bone": "arm_R",
-      "keyframes": [
-        { "t": 0, "rotation": 0, "ease": "easeOut" },
-        { "t": 260, "rotation": -118, "ease": "easeOut" },
-        { "t": 470, "rotation": -136, "ease": "easeInOut" },
-        { "t": 650, "rotation": -116, "ease": "easeInOut" },
-        { "t": 830, "rotation": -136, "ease": "easeInOut" },
-        { "t": 1010, "rotation": -116, "ease": "easeInOut" },
-        { "t": 1190, "rotation": -132, "ease": "easeInOut" },
-        { "t": 1500, "rotation": 0, "ease": "easeInOut" }
+      "priority": 100,
+      "tracks": [
+        {
+          "bone": "arm_R",
+          "keyframes": [
+            { "t": 0, "rotation": 0, "ease": "easeOut" },
+            { "t": 260, "rotation": -112, "ease": "easeOut" },
+            { "t": 470, "rotation": -130, "ease": "easeInOut" },
+            { "t": 650, "rotation": -112, "ease": "easeInOut" },
+            { "t": 830, "rotation": -130, "ease": "easeInOut" },
+            { "t": 1010, "rotation": -112, "ease": "easeInOut" },
+            { "t": 1190, "rotation": -126, "ease": "easeInOut" },
+            { "t": 1500, "rotation": 0, "ease": "easeInOut" }
+          ]
+        },
+        {
+          "bone": "head",
+          "keyframes": [
+            { "t": 0, "rotation": 0 },
+            { "t": 260, "rotation": -3, "ease": "easeOut" },
+            { "t": 760, "rotation": 2, "ease": "easeInOut" },
+            { "t": 1190, "rotation": -2, "ease": "easeInOut" },
+            { "t": 1500, "rotation": 0, "ease": "easeInOut" }
+          ]
+        },
+        {
+          "bone": "body",
+          "keyframes": [
+            { "t": 0, "rotation": 0 },
+            { "t": 300, "rotation": -1.5, "ease": "easeOut" },
+            { "t": 1180, "rotation": -1.5 },
+            { "t": 1500, "rotation": 0, "ease": "easeInOut" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "motion.look.left.001",
+      "duration": 1050,
+      "priority": 10,
+      "tracks": [
+        {
+          "bone": "head",
+          "keyframes": [
+            { "t": 0, "rotation": 0 },
+            { "t": 260, "rotation": -7, "ease": "easeOut" },
+            { "t": 720, "rotation": -7 },
+            { "t": 1050, "rotation": 0, "ease": "easeInOut" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "motion.look.right.001",
+      "duration": 1050,
+      "priority": 10,
+      "tracks": [
+        {
+          "bone": "head",
+          "keyframes": [
+            { "t": 0, "rotation": 0 },
+            { "t": 260, "rotation": 7, "ease": "easeOut" },
+            { "t": 720, "rotation": 7 },
+            { "t": 1050, "rotation": 0, "ease": "easeInOut" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "motion.curious.001",
+      "duration": 1250,
+      "priority": 20,
+      "tracks": [
+        {
+          "bone": "head",
+          "keyframes": [
+            { "t": 0, "rotation": 0 },
+            { "t": 250, "rotation": -10, "ease": "easeOut" },
+            { "t": 600, "rotation": 6, "ease": "easeInOut" },
+            { "t": 900, "rotation": -4, "ease": "easeInOut" },
+            { "t": 1250, "rotation": 0, "ease": "easeInOut" }
+          ]
+        },
+        {
+          "bone": "body",
+          "keyframes": [
+            { "t": 0, "rotation": 0 },
+            { "t": 300, "rotation": 1.4, "ease": "easeOut" },
+            { "t": 900, "rotation": -0.8, "ease": "easeInOut" },
+            { "t": 1250, "rotation": 0, "ease": "easeInOut" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "motion.sway.001",
+      "duration": 1700,
+      "priority": 5,
+      "tracks": [
+        {
+          "bone": "body",
+          "keyframes": [
+            { "t": 0, "rotation": 0 },
+            { "t": 400, "rotation": -2.2, "ease": "easeInOut" },
+            { "t": 850, "rotation": 2.2, "ease": "easeInOut" },
+            { "t": 1300, "rotation": -1.1, "ease": "easeInOut" },
+            { "t": 1700, "rotation": 0, "ease": "easeInOut" }
+          ]
+        },
+        {
+          "bone": "head",
+          "keyframes": [
+            { "t": 0, "rotation": 0 },
+            { "t": 400, "rotation": 2.8, "ease": "easeInOut" },
+            { "t": 850, "rotation": -2.8, "ease": "easeInOut" },
+            { "t": 1300, "rotation": 1.4, "ease": "easeInOut" },
+            { "t": 1700, "rotation": 0, "ease": "easeInOut" }
+          ]
+        }
       ]
     }
   ]
