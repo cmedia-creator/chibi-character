@@ -34,9 +34,20 @@ export class MotionPlayer {
     return this.activeMotion?.id ?? null;
   }
 
+  canPlay(id: string): boolean {
+    const motion = this.catalog.get(id);
+    if (!motion) return false;
+    const tracks = this.normalizeTracks(motion);
+    return tracks.length > 0 && tracks.every((track) => this.bones.has(track.bone));
+  }
+
   play(id: string, options: PlayOptions = {}): Promise<void> {
     const motion = this.catalog.get(id);
     if (!motion) throw new Error(`Unknown motion: ${id}`);
+
+    const tracks = this.normalizeTracks(motion);
+    const missingBone = tracks.find((track) => !this.bones.has(track.bone))?.bone;
+    if (missingBone) throw new Error(`Motion ${id} requires missing bone: ${missingBone}`);
 
     if (this.activeMotion) {
       const currentPriority = this.activeMotion.priority ?? 0;
@@ -45,11 +56,9 @@ export class MotionPlayer {
       this.finishActive(true);
     }
 
-    const tracks = this.normalizeTracks(motion);
     this.activeBaselines.clear();
     for (const track of tracks) {
-      const bone = this.bones.get(track.bone);
-      if (!bone) throw new Error(`Unknown bone: ${track.bone}`);
+      const bone = this.bones.get(track.bone)!;
       if (!this.activeBaselines.has(track.bone)) {
         this.activeBaselines.set(track.bone, {
           angle: bone.angle,
