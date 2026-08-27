@@ -123,6 +123,137 @@
           ]
         }
       ]
+    },
+    {
+      "id": "motion.walk.inplace.001",
+      "duration": 1800,
+      "priority": 12,
+      "tracks": [
+        {
+          "bone": "leg_L",
+          "keyframes": [
+            { "t": 0, "rotation": 0 },
+            { "t": 225, "rotation": -11, "ease": "easeInOut" },
+            { "t": 675, "rotation": 11, "ease": "easeInOut" },
+            { "t": 1125, "rotation": -11, "ease": "easeInOut" },
+            { "t": 1575, "rotation": 11, "ease": "easeInOut" },
+            { "t": 1800, "rotation": 0, "ease": "easeInOut" }
+          ]
+        },
+        {
+          "bone": "leg_R",
+          "keyframes": [
+            { "t": 0, "rotation": 0 },
+            { "t": 225, "rotation": 11, "ease": "easeInOut" },
+            { "t": 675, "rotation": -11, "ease": "easeInOut" },
+            { "t": 1125, "rotation": 11, "ease": "easeInOut" },
+            { "t": 1575, "rotation": -11, "ease": "easeInOut" },
+            { "t": 1800, "rotation": 0, "ease": "easeInOut" }
+          ]
+        },
+        {
+          "bone": "pelvis",
+          "keyframes": [
+            { "t": 0, "y": -334 },
+            { "t": 225, "y": -344, "ease": "easeInOut" },
+            { "t": 450, "y": -334, "ease": "easeInOut" },
+            { "t": 675, "y": -344, "ease": "easeInOut" },
+            { "t": 900, "y": -334, "ease": "easeInOut" },
+            { "t": 1125, "y": -344, "ease": "easeInOut" },
+            { "t": 1350, "y": -334, "ease": "easeInOut" },
+            { "t": 1575, "y": -344, "ease": "easeInOut" },
+            { "t": 1800, "y": -334, "ease": "easeInOut" }
+          ]
+        },
+        {
+          "bone": "body",
+          "keyframes": [
+            { "t": 0, "rotation": 0 },
+            { "t": 450, "rotation": -1.2, "ease": "easeInOut" },
+            { "t": 900, "rotation": 1.2, "ease": "easeInOut" },
+            { "t": 1350, "rotation": -1.2, "ease": "easeInOut" },
+            { "t": 1800, "rotation": 0, "ease": "easeInOut" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "motion.sit.001",
+      "duration": 3200,
+      "priority": 15,
+      "tracks": [
+        {
+          "bone": "pelvis",
+          "keyframes": [
+            { "t": 0, "y": -334 },
+            { "t": 500, "y": -232, "ease": "easeOut" },
+            { "t": 2550, "y": -232 },
+            { "t": 3200, "y": -334, "ease": "easeInOut" }
+          ]
+        },
+        {
+          "bone": "leg_L",
+          "keyframes": [
+            { "t": 0, "rotation": 0, "scaleY": 1 },
+            { "t": 500, "rotation": -7, "scaleY": 0.64, "ease": "easeOut" },
+            { "t": 2550, "rotation": -7, "scaleY": 0.64 },
+            { "t": 3200, "rotation": 0, "scaleY": 1, "ease": "easeInOut" }
+          ]
+        },
+        {
+          "bone": "leg_R",
+          "keyframes": [
+            { "t": 0, "rotation": 0, "scaleY": 1 },
+            { "t": 500, "rotation": 7, "scaleY": 0.64, "ease": "easeOut" },
+            { "t": 2550, "rotation": 7, "scaleY": 0.64 },
+            { "t": 3200, "rotation": 0, "scaleY": 1, "ease": "easeInOut" }
+          ]
+        },
+        {
+          "bone": "body",
+          "keyframes": [
+            { "t": 0, "rotation": 0 },
+            { "t": 500, "rotation": 2.5, "ease": "easeOut" },
+            { "t": 2550, "rotation": 2.5 },
+            { "t": 3200, "rotation": 0, "ease": "easeInOut" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "motion.heart.001",
+      "duration": 2100,
+      "priority": 30,
+      "tracks": [
+        {
+          "bone": "arm_L",
+          "keyframes": [
+            { "t": 0, "rotation": 0 },
+            { "t": 450, "rotation": -58, "ease": "easeOut" },
+            { "t": 1550, "rotation": -58 },
+            { "t": 2100, "rotation": 0, "ease": "easeInOut" }
+          ]
+        },
+        {
+          "bone": "arm_R",
+          "keyframes": [
+            { "t": 0, "rotation": 0 },
+            { "t": 450, "rotation": 58, "ease": "easeOut" },
+            { "t": 1550, "rotation": 58 },
+            { "t": 2100, "rotation": 0, "ease": "easeInOut" }
+          ]
+        },
+        {
+          "bone": "head",
+          "keyframes": [
+            { "t": 0, "rotation": 0 },
+            { "t": 450, "rotation": -4, "ease": "easeOut" },
+            { "t": 1100, "rotation": 3, "ease": "easeInOut" },
+            { "t": 1550, "rotation": -3, "ease": "easeInOut" },
+            { "t": 2100, "rotation": 0, "ease": "easeInOut" }
+          ]
+        }
+      ]
     }
   ]
 }
