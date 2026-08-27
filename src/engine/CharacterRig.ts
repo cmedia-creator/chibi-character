@@ -10,6 +10,7 @@ export class CharacterRig {
   private readonly motionPlayer: MotionPlayer;
   private blinkTimer: number | null = null;
   private elapsedSeconds = 0;
+  private blinking = false;
 
   private constructor(
     private readonly definition: CharacterDefinition,
@@ -61,6 +62,10 @@ export class CharacterRig {
 
   play(id: string): Promise<void> {
     return this.motionPlayer.play(id);
+  }
+
+  blinkNow(): Promise<void> {
+    return this.blink();
   }
 
   update(deltaMS: number): void {
@@ -119,15 +124,22 @@ export class CharacterRig {
   }
 
   private async blink(): Promise<void> {
+    if (this.blinking) return;
+
     const open = this.slots.get('eyes_open');
     const closed = this.slots.get('eyes_closed');
     if (!open || !closed) return;
 
-    open.visible = false;
-    closed.visible = true;
-    await new Promise((resolve) => window.setTimeout(resolve, 115));
-    open.visible = true;
-    closed.visible = false;
+    this.blinking = true;
+    try {
+      open.visible = false;
+      closed.visible = true;
+      await new Promise((resolve) => window.setTimeout(resolve, 140));
+      open.visible = true;
+      closed.visible = false;
+    } finally {
+      this.blinking = false;
+    }
   }
 
   private requireBone(name: BoneName): Container {
