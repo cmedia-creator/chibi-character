@@ -16,8 +16,14 @@ const engineStatus = document.querySelector<HTMLSpanElement>('#engine-status');
 const actionStatus = document.querySelector<HTMLElement>('#action-status');
 const blinkButton = document.querySelector<HTMLButtonElement>('#blink-button');
 const waveButton = document.querySelector<HTMLButtonElement>('#wave-button');
+const heartButton = document.querySelector<HTMLButtonElement>('#heart-button');
+const walkButton = document.querySelector<HTMLButtonElement>('#walk-button');
+const sitButton = document.querySelector<HTMLButtonElement>('#sit-button');
 
-if (!stageHost || !engineStatus || !actionStatus || !blinkButton || !waveButton) {
+if (
+  !stageHost || !engineStatus || !actionStatus || !blinkButton || !waveButton ||
+  !heartButton || !walkButton || !sitButton
+) {
   throw new Error('Required DOM elements are missing.');
 }
 
@@ -85,6 +91,9 @@ const behaviorLabel = (state: BehaviorState): string => {
   if (state === 'sway') return 'IDLE SWAY';
   if (state === 'greet') return 'WAVE / GREET';
   if (state === 'curious') return 'CURIOUS';
+  if (state === 'walk') return 'WALK';
+  if (state === 'sit') return 'SIT';
+  if (state === 'heart') return 'HEART';
   return readyLabel();
 };
 
@@ -93,24 +102,33 @@ const params = new URLSearchParams(window.location.search);
 if (params.get('auto') === '0') behavior.setEnabled(false);
 
 const blink = async (): Promise<void> => {
-  setStatus('BLINK TEST');
+  setStatus('BLINK');
   await rig.blinkNow();
   setStatus(readyLabel());
 };
 
-const wave = async (): Promise<void> => {
-  await behavior.onTap();
+const playMotion = async (id: string, label: string): Promise<void> => {
+  if (!rig.canPlay(id)) {
+    setStatus(`${label} NOT AVAILABLE`);
+    return;
+  }
+  setStatus(label);
+  await rig.play(id, { interrupt: true });
+  setStatus(readyLabel());
 };
 
 rig.onTap(() => {
   void behavior.onTap();
 });
-blinkButton.addEventListener('click', () => {
-  void blink();
-});
-waveButton.addEventListener('click', () => {
-  void wave();
-});
+blinkButton.addEventListener('click', () => void blink());
+waveButton.addEventListener('click', () => void behavior.onTap());
+heartButton.addEventListener('click', () => void playMotion('motion.heart.001', 'HEART'));
+walkButton.addEventListener('click', () => void playMotion('motion.walk.inplace.001', 'WALK'));
+sitButton.addEventListener('click', () => void playMotion('motion.sit.001', 'SIT'));
+
+heartButton.disabled = !rig.canPlay('motion.heart.001');
+walkButton.disabled = !rig.canPlay('motion.walk.inplace.001');
+sitButton.disabled = !rig.canPlay('motion.sit.001');
 
 let hiddenAt: number | null = null;
 document.addEventListener('visibilitychange', () => {
