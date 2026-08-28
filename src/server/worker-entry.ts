@@ -14,7 +14,11 @@ const worker = {
       }
 
       if (url.pathname.startsWith('/api/auth/')) {
-        return new AuthHttpApp(env.DB, env.TURNSTILE_SECRET).handle(request);
+        return new AuthHttpApp(
+          env.DB,
+          env.TURNSTILE_SECRET,
+          env.PASSWORD_PEPPER,
+        ).handle(request);
       }
 
       return new ServerApp(new D1Repository(env.DB)).handle(request);
