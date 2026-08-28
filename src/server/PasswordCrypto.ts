@@ -1,39 +1,6 @@
-const PBKDF2_ITERATIONS = 120_000;
-const HASH_BYTES = 32;
-const SALT_BYTES = 16;
 const RECOVERY_BYTES = 12;
-
-export interface PasswordHash {
-  salt: string;
-  hash: string;
-  iterations: number;
-}
-
-export async function hashPassword(value: string): Promise<PasswordHash> {
-  const saltBytes = randomBytes(SALT_BYTES);
-  const hashBytes = await derive(value, saltBytes, PBKDF2_ITERATIONS);
-  return {
-    salt: base64urlEncode(saltBytes),
-    hash: base64urlEncode(hashBytes),
-    iterations: PBKDF2_ITERATIONS,
-  };
-}
-
-export async function verifyPassword(
-  value: string,
-  salt: string,
-  expectedHash: string,
-  iterations: number,
-): Promise<boolean> {
-  if (!Number.isInteger(iterations) || iterations < 10_000 || iterations > 1_000_000) return false;
-  try {
-    const actual = await derive(value, base64urlDecode(salt), iterations);
-    const expected = base64urlDecode(expectedHash);
-    return timingSafeEqual(actual, expected);
-  } catch {
-    return false;
-  }
-}
+const RECOVERY_SALT_BYTES = 16;
+const CLIENT_KDF_ITERATIONS = 120_000;
 
 export function generateRecoveryCode(): string {
   const hex = [...randomBytes(RECOVERY_BYTES)]
@@ -47,31 +14,75 @@ export function normalizeRecoveryCode(value: string): string {
   return value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
 }
 
-async function derive(
-  value: string,
-  saltInput: Uint8Array,
-  iterations: number,
-): Promise<Uint8Array<ArrayBuffer>> {
-  const salt = toArrayBufferBackedUint8Array(saltInput);
-  const materialBytes = toArrayBufferBackedUint8Array(new TextEncoder().encode(value));
-  const material = await crypto.subtle.importKey(
+export function generateRecoverySalt(): string {
+  return base64urlEncode(randomBytes(RECOVERY_SALT_BYTES));
+}
+
+export async function hashPasswordVerifier(
+  pepper: string,
+  loginId: string,
+  verifier: string,
+): Promise<string> {
+  return hmacBase64url(pepper, `password\n${loginId}\n${verifier}`);
+}
+
+export async function hashRecoveryCode(
+  pepper: string,
+  recoverySalt: string,
+  recoveryCode: string,
+): Promise<string> {
+  return hmacBase64url(
+    pepper,
+    `recovery\n${recoverySalt}\n${normalizeRecoveryCode(recoveryCode)}`,
+  );
+}
+
+export async function fakePasswordSalt(pepper: string, loginId: string): Promise<string> {
+  const digest = await hmacBytes(pepper, `fake-salt\n${loginId}`);
+  return base64urlEncode(digest.slice(0, 16));
+}
+
+export function clientKdfIterations(): number {
+  return CLIENT_KDF_ITERATIONS;
+}
+
+export function isValidVerifier(value: string): boolean {
+  return /^[A-Za-z0-9_-]{43}$/.test(value);
+}
+
+export function isValidPasswordSalt(value: string): boolean {
+  return /^[A-Za-z0-9_-]{22}$/.test(value);
+}
+
+export function isValidClientIterations(value: number): boolean {
+  return Number.isInteger(value) && value === CLIENT_KDF_ITERATIONS;
+}
+
+export function timingSafeStringEqual(a: string, b: string): boolean {
+  const aBytes = new TextEncoder().encode(a);
+  const bBytes = new TextEncoder().encode(b);
+  if (aBytes.length !== bBytes.length) return false;
+  let diff = 0;
+  for (let i = 0; i < aBytes.length; i += 1) diff |= aBytes[i] ^ bBytes[i];
+  return diff === 0;
+}
+
+async function hmacBase64url(secret: string, message: string): Promise<string> {
+  return base64urlEncode(await hmacBytes(secret, message));
+}
+
+async function hmacBytes(secret: string, message: string): Promise<Uint8Array<ArrayBuffer>> {
+  const keyBytes = toArrayBufferBackedUint8Array(new TextEncoder().encode(secret));
+  const messageBytes = toArrayBufferBackedUint8Array(new TextEncoder().encode(message));
+  const key = await crypto.subtle.importKey(
     'raw',
-    materialBytes,
-    { name: 'PBKDF2' },
+    keyBytes,
+    { name: 'HMAC', hash: 'SHA-256' },
     false,
-    ['deriveBits'],
+    ['sign'],
   );
-  const bits = await crypto.subtle.deriveBits(
-    {
-      name: 'PBKDF2',
-      hash: 'SHA-256',
-      salt,
-      iterations,
-    },
-    material,
-    HASH_BYTES * 8,
-  );
-  return new Uint8Array(bits);
+  const signature = await crypto.subtle.sign('HMAC', key, messageBytes);
+  return new Uint8Array(signature);
 }
 
 function randomBytes(length: number): Uint8Array<ArrayBuffer> {
@@ -80,25 +91,10 @@ function randomBytes(length: number): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
-function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i += 1) diff |= a[i] ^ b[i];
-  return diff === 0;
-}
-
 function base64urlEncode(bytes: Uint8Array): string {
   let binary = '';
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-function base64urlDecode(value: string): Uint8Array<ArrayBuffer> {
-  const padded = value.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(value.length / 4) * 4, '=');
-  const binary = atob(padded);
-  const bytes = new Uint8Array(new ArrayBuffer(binary.length));
-  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
-  return bytes;
 }
 
 function toArrayBufferBackedUint8Array(value: Uint8Array): Uint8Array<ArrayBuffer> {

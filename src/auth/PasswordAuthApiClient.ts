@@ -1,3 +1,5 @@
+import { createPasswordMaterial, derivePasswordVerifier } from './PasswordKdfClient';
+
 type ApiSuccess<T> = { ok: true; data: T };
 type ApiFailure = { ok: false; error: { code: string; message: string } };
 type ApiResult<T> = ApiSuccess<T> | ApiFailure;
@@ -11,30 +13,64 @@ export interface PasswordRegisterResult extends PasswordAuthSessionResult {
   recoveryCode: string;
 }
 
+export interface PasswordParams {
+  salt: string;
+  iterations: number;
+}
+
 export class PasswordAuthApiClient {
-  register(input: {
+  getParams(loginId: string): Promise<PasswordParams> {
+    return this.request('/api/auth/password/params', { loginId });
+  }
+
+  async register(input: {
     loginId: string;
     password: string;
     turnstileToken: string;
   }): Promise<PasswordRegisterResult> {
-    return this.request('/api/auth/password/register', input);
+    const material = await createPasswordMaterial(input.password);
+    return this.request('/api/auth/password/register', {
+      loginId: input.loginId,
+      verifier: material.verifier,
+      passwordSalt: material.salt,
+      passwordIterations: material.iterations,
+      turnstileToken: input.turnstileToken,
+    });
   }
 
-  login(input: {
+  async login(input: {
     loginId: string;
     password: string;
     turnstileToken: string;
   }): Promise<PasswordAuthSessionResult> {
-    return this.request('/api/auth/password/login', input);
+    const params = await this.getParams(input.loginId);
+    const verifier = await derivePasswordVerifier(
+      input.password,
+      params.salt,
+      params.iterations,
+    );
+    return this.request('/api/auth/password/login', {
+      loginId: input.loginId,
+      verifier,
+      turnstileToken: input.turnstileToken,
+    });
   }
 
-  recover(input: {
+  async recover(input: {
     loginId: string;
     recoveryCode: string;
     newPassword: string;
     turnstileToken: string;
   }): Promise<PasswordRegisterResult> {
-    return this.request('/api/auth/password/recover', input);
+    const material = await createPasswordMaterial(input.newPassword);
+    return this.request('/api/auth/password/recover', {
+      loginId: input.loginId,
+      recoveryCode: input.recoveryCode,
+      newVerifier: material.verifier,
+      passwordSalt: material.salt,
+      passwordIterations: material.iterations,
+      turnstileToken: input.turnstileToken,
+    });
   }
 
   logout(): Promise<{ authenticated: boolean }> {

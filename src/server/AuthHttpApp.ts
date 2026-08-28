@@ -19,18 +19,30 @@ type RegisterOptionsBody = {
   turnstileToken?: unknown;
 };
 
+type PasswordParamsBody = {
+  loginId?: unknown;
+};
+
 type PasswordRegisterBody = {
   loginId?: unknown;
-  password?: unknown;
+  verifier?: unknown;
+  passwordSalt?: unknown;
+  passwordIterations?: unknown;
   turnstileToken?: unknown;
 };
 
-type PasswordLoginBody = PasswordRegisterBody;
+type PasswordLoginBody = {
+  loginId?: unknown;
+  verifier?: unknown;
+  turnstileToken?: unknown;
+};
 
 type PasswordRecoverBody = {
   loginId?: unknown;
   recoveryCode?: unknown;
-  newPassword?: unknown;
+  newVerifier?: unknown;
+  passwordSalt?: unknown;
+  passwordIterations?: unknown;
   turnstileToken?: unknown;
 };
 
@@ -38,6 +50,7 @@ export class AuthHttpApp {
   constructor(
     private readonly db: D1Database,
     private readonly turnstileSecret?: string,
+    private readonly passwordPepper?: string,
   ) {}
 
   async handle(request: Request): Promise<Response> {
@@ -45,15 +58,26 @@ export class AuthHttpApp {
     const now = Date.now();
     const store = new D1AuthStore(this.db);
     const passkeys = new PasskeyService(store, relyingPartyFromRequest(request));
-    const passwordAuth = new PasswordAuthService(new PasswordAuthStore(this.db), store);
+    const passwordAuth = this.passwordPepper
+      ? new PasswordAuthService(new PasswordAuthStore(this.db), store, this.passwordPepper)
+      : null;
 
     try {
+      if (request.method === 'POST' && url.pathname === '/api/auth/password/params') {
+        const service = requirePasswordService(passwordAuth);
+        const raw = await readJsonBody<PasswordParamsBody>(request);
+        return jsonSuccess(await service.params(asString(raw.loginId)));
+      }
+
       if (request.method === 'POST' && url.pathname === '/api/auth/password/register') {
+        const service = requirePasswordService(passwordAuth);
         const raw = await readJsonBody<PasswordRegisterBody>(request);
         await this.requirePasswordTurnstile(request, raw.turnstileToken);
-        const result = await passwordAuth.register({
+        const result = await service.register({
           loginId: asString(raw.loginId),
-          password: asString(raw.password),
+          verifier: asString(raw.verifier),
+          passwordSalt: asString(raw.passwordSalt),
+          passwordIterations: asNumber(raw.passwordIterations),
           now,
         });
         return withSessionCookie(
@@ -68,11 +92,12 @@ export class AuthHttpApp {
       }
 
       if (request.method === 'POST' && url.pathname === '/api/auth/password/login') {
+        const service = requirePasswordService(passwordAuth);
         const raw = await readJsonBody<PasswordLoginBody>(request);
         await this.requirePasswordTurnstile(request, raw.turnstileToken);
-        const result = await passwordAuth.login({
+        const result = await service.login({
           loginId: asString(raw.loginId),
-          password: asString(raw.password),
+          verifier: asString(raw.verifier),
           now,
         });
         return withSessionCookie(
@@ -83,12 +108,15 @@ export class AuthHttpApp {
       }
 
       if (request.method === 'POST' && url.pathname === '/api/auth/password/recover') {
+        const service = requirePasswordService(passwordAuth);
         const raw = await readJsonBody<PasswordRecoverBody>(request);
         await this.requirePasswordTurnstile(request, raw.turnstileToken);
-        const result = await passwordAuth.recover({
+        const result = await service.recover({
           loginId: asString(raw.loginId),
           recoveryCode: asString(raw.recoveryCode),
-          newPassword: asString(raw.newPassword),
+          newVerifier: asString(raw.newVerifier),
+          passwordSalt: asString(raw.passwordSalt),
+          passwordIterations: asNumber(raw.passwordIterations),
           now,
         });
         return withSessionCookie(
@@ -187,6 +215,15 @@ function withSessionCookie(
   return response;
 }
 
+function requirePasswordService(service: PasswordAuthService | null): PasswordAuthService {
+  if (!service) throw new HttpError(503, 'internal_error', 'Password authentication is not configured.');
+  return service;
+}
+
 function asString(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+function asNumber(value: unknown): number {
+  return typeof value === 'number' ? value : Number.NaN;
 }
