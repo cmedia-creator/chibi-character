@@ -239,9 +239,9 @@ export async function mountAuthPanel(): Promise<() => void> {
   saveButton.addEventListener('click', async () => {
     if (busy) return;
     setBusy(true);
-    result.textContent = '端末内のキャラ下書きをD1へ保存中…';
+    result.textContent = 'TEST CHARACTER 01をD1へ保存中…';
     try {
-      const saved = await sync.saveCharacter();
+      const saved = await sync.saveTestCharacter();
       result.textContent = `D1保存成功 / character ${saved.id.slice(0, 8)}…`;
     } catch (error) {
       console.error(error);
@@ -278,11 +278,6 @@ function friendlyError(error: unknown): string {
     if (error.status === 429) return '試行回数が多すぎます。少し時間を空けてから再度お試しください。';
     if (error.status === 400) return error.message;
   }
-  if (error instanceof Error) {
-    if (error.message === 'Character draft does not exist.') {
-      return '保存するキャラ下書きがまだありません。先にCREATE画面でキャラを作成してください。';
-    }
-    return error.message;
-  }
+  if (error instanceof Error) return error.message;
   return '処理に失敗しました。';
 }
