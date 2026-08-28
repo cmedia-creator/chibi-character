@@ -1,1 +1,29 @@
-.auth-panel{margin-top:20px;padding:18px;border:1px solid rgba(255,255,255,.12);border-radius:22px;background:rgba(16,14,24,.82);backdrop-filter:blur(12px)}.auth-panel__head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}.auth-panel__head h2{margin:3px 0 0;font-size:22px}.auth-panel__status{font-size:12px;letter-spacing:.08em;color:#b9b2c6}.auth-panel__actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.auth-panel button{min-height:48px;border:0;border-radius:15px;padding:0 14px;font:inherit;font-weight:700;cursor:pointer;background:#f3edf6;color:#17131b}.auth-panel button[disabled]{opacity:.42;cursor:not-allowed}.auth-panel button[data-kind='secondary']{background:rgba(255,255,255,.08);color:#f5f1f7;border:1px solid rgba(255,255,255,.1)}.auth-panel__turnstile{min-height:70px;margin:12px 0;display:flex;align-items:center}.auth-panel__note{margin:12px 0 0;color:#aaa2b3;font-size:13px;line-height:1.6}.auth-panel__result{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05);font-size:13px;line-height:1.5;word-break:break-word}@media(max-width:640px){.auth-panel__actions{grid-template-columns:1fr}.auth-panel{padding:15px;border-radius:18px}}
+.auth-panel{margin-top:20px;padding:18px;border:1px solid rgba(255,255,255,.12);border-radius:22px;background:rgba(16,14,24,.82);backdrop-filter:blur(12px)}
+.auth-panel__head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}
+.auth-panel__head h2{margin:3px 0 0;font-size:22px}
+.auth-panel__status{margin:0 0 14px;font-size:13px;line-height:1.6;color:#b9b2c6}
+.auth-panel__tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.auth-panel button{min-height:48px;border:0;border-radius:15px;padding:0 14px;font:inherit;font-weight:700;cursor:pointer;background:#f3edf6;color:#17131b}
+.auth-panel button[disabled]{opacity:.42;cursor:not-allowed}
+.auth-panel button[data-kind='secondary']{background:rgba(255,255,255,.08);color:#f5f1f7;border:1px solid rgba(255,255,255,.1)}
+.auth-panel__tabs button{min-height:42px;font-size:13px}
+.auth-panel__tabs button.is-active{background:#f3edf6;color:#17131b;border:0}
+.auth-panel__form{display:grid;gap:10px}
+.auth-panel__form label{display:grid;gap:6px}
+.auth-panel__form label[hidden]{display:none}
+.auth-panel__form span{font-size:12px;color:#aaa2b3;letter-spacing:.04em}
+.auth-panel__form input{width:100%;box-sizing:border-box;min-height:48px;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:rgba(255,255,255,.06);color:#fff;padding:0 14px;font:inherit;outline:none}
+.auth-panel__form input:focus{border-color:rgba(255,255,255,.34);background:rgba(255,255,255,.08)}
+.auth-panel__form input::placeholder{color:#746d7e}
+.auth-panel__turnstile{min-height:70px;margin:14px 0;display:flex;align-items:center}
+.auth-panel__primary{width:100%}
+.auth-panel__member{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.auth-panel__member[hidden],.auth-panel__guest[hidden],.auth-panel__recovery-output[hidden]{display:none}
+.auth-panel__recovery-output{margin:14px 0;padding:14px;border:1px solid rgba(255,255,255,.14);border-radius:16px;background:rgba(255,255,255,.06)}
+.auth-panel__recovery-output strong{display:block;margin:3px 0 12px;font-size:15px}
+.auth-panel__recovery-output code{display:block;margin-bottom:10px;padding:12px;border-radius:12px;background:#0d0b12;color:#fff;font-size:16px;line-height:1.5;letter-spacing:.08em;word-break:break-all}
+.auth-panel__recovery-output button{width:100%;min-height:42px}
+.auth-panel__recovery-output p:last-child{margin:10px 0 0;color:#aaa2b3;font-size:12px;line-height:1.6}
+.auth-panel__note{margin:12px 0 0;color:#aaa2b3;font-size:13px;line-height:1.6}
+.auth-panel__result{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05);font-size:13px;line-height:1.5;word-break:break-word}
+@media(max-width:640px){.auth-panel{padding:15px;border-radius:18px}.auth-panel__member{grid-template-columns:1fr}.auth-panel__tabs{grid-template-columns:1fr 1fr 1fr}.auth-panel__tabs button{padding:0 8px;font-size:12px}.auth-panel__head h2{font-size:21px}}
