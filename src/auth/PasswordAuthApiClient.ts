@@ -1,3 +1,5 @@
+import { createPasswordMaterial, derivePasswordVerifier } from './PasswordKdfClient';
+
 type ApiSuccess<T> = { ok: true; data: T };
 type ApiFailure = { ok: false; error: { code: string; message: string } };
 type ApiResult<T> = ApiSuccess<T> | ApiFailure;
@@ -21,33 +23,54 @@ export class PasswordAuthApiClient {
     return this.request('/api/auth/password/params', { loginId });
   }
 
-  register(input: {
+  async register(input: {
     loginId: string;
-    verifier: string;
-    passwordSalt: string;
-    passwordIterations: number;
+    password: string;
     turnstileToken: string;
   }): Promise<PasswordRegisterResult> {
-    return this.request('/api/auth/password/register', input);
+    const material = await createPasswordMaterial(input.password);
+    return this.request('/api/auth/password/register', {
+      loginId: input.loginId,
+      verifier: material.verifier,
+      passwordSalt: material.salt,
+      passwordIterations: material.iterations,
+      turnstileToken: input.turnstileToken,
+    });
   }
 
-  login(input: {
+  async login(input: {
     loginId: string;
-    verifier: string;
+    password: string;
     turnstileToken: string;
   }): Promise<PasswordAuthSessionResult> {
-    return this.request('/api/auth/password/login', input);
+    const params = await this.getParams(input.loginId);
+    const verifier = await derivePasswordVerifier(
+      input.password,
+      params.salt,
+      params.iterations,
+    );
+    return this.request('/api/auth/password/login', {
+      loginId: input.loginId,
+      verifier,
+      turnstileToken: input.turnstileToken,
+    });
   }
 
-  recover(input: {
+  async recover(input: {
     loginId: string;
     recoveryCode: string;
-    newVerifier: string;
-    passwordSalt: string;
-    passwordIterations: number;
+    newPassword: string;
     turnstileToken: string;
   }): Promise<PasswordRegisterResult> {
-    return this.request('/api/auth/password/recover', input);
+    const material = await createPasswordMaterial(input.newPassword);
+    return this.request('/api/auth/password/recover', {
+      loginId: input.loginId,
+      recoveryCode: input.recoveryCode,
+      newVerifier: material.verifier,
+      passwordSalt: material.salt,
+      passwordIterations: material.iterations,
+      turnstileToken: input.turnstileToken,
+    });
   }
 
   logout(): Promise<{ authenticated: boolean }> {
