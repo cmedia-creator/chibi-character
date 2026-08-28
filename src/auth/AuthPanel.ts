@@ -3,36 +3,13 @@ import { ApiClient } from '../api/ApiClient';
 import { SyncService } from '../data/SyncService';
 import { PasswordAuthApiClient, PasswordAuthApiError } from './PasswordAuthApiClient';
 
-const TURNSTILE_SITE_KEY = '0x4AAAAAAEePSvgyVDcPtBaY';
-const TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-
 type AuthMode = 'login' | 'register' | 'recover';
-
-type TurnstileApi = {
-  render(container: HTMLElement, options: {
-    sitekey: string;
-    action?: string;
-    theme?: 'auto' | 'light' | 'dark';
-    callback?: (token: string) => void;
-    'expired-callback'?: () => void;
-    'error-callback'?: () => void;
-  }): string;
-  reset(widgetId?: string): void;
-};
-
-declare global {
-  interface Window {
-    turnstile?: TurnstileApi;
-  }
-}
 
 export async function mountAuthPanel(): Promise<() => void> {
   const authApi = new PasswordAuthApiClient();
   const api = new ApiClient();
   const sync = new SyncService();
   let mode: AuthMode = 'login';
-  let turnstileToken = '';
-  let widgetId = '';
   let busy = false;
   let authenticated = false;
 
@@ -74,8 +51,7 @@ export async function mountAuthPanel(): Promise<() => void> {
         </label>
       </div>
 
-      <div class="auth-panel__turnstile" data-turnstile></div>
-      <button type="button" class="auth-panel__primary" data-submit disabled>ログイン</button>
+      <button type="button" class="auth-panel__primary" data-submit>ログイン</button>
     </div>
 
     <div class="auth-panel__recovery-output" data-recovery-output hidden>
@@ -92,7 +68,7 @@ export async function mountAuthPanel(): Promise<() => void> {
     </div>
 
     <div class="auth-panel__result" data-result>未実行</div>
-    <p class="auth-panel__note">キャラ作成や自律行動は端末内で処理します。D1へ書き込むのは、アカウント操作と明示的な保存操作だけです。</p>
+    <p class="auth-panel__note">認証はユーザーIDとパスワードだけです。連続試行はサーバー側で自動制限します。通常のキャラ動作ではDB通信しません。</p>
   `;
   document.querySelector('.app-shell')?.appendChild(root);
 
@@ -101,7 +77,6 @@ export async function mountAuthPanel(): Promise<() => void> {
   const result = root.querySelector<HTMLElement>('[data-result]')!;
   const guest = root.querySelector<HTMLElement>('[data-guest]')!;
   const member = root.querySelector<HTMLElement>('[data-member]')!;
-  const turnstileHost = root.querySelector<HTMLElement>('[data-turnstile]')!;
   const loginIdInput = root.querySelector<HTMLInputElement>('[data-login-id]')!;
   const passwordInput = root.querySelector<HTMLInputElement>('[data-password]')!;
   const passwordLabel = root.querySelector<HTMLElement>('[data-password-label]')!;
@@ -118,7 +93,7 @@ export async function mountAuthPanel(): Promise<() => void> {
   const modeButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-mode]')];
 
   const updateControls = (): void => {
-    submitButton.disabled = busy || authenticated || !turnstileToken;
+    submitButton.disabled = busy || authenticated;
     saveButton.disabled = busy || !authenticated;
     logoutButton.disabled = busy || !authenticated;
     for (const button of modeButtons) button.disabled = busy || authenticated;
@@ -126,12 +101,6 @@ export async function mountAuthPanel(): Promise<() => void> {
 
   const setBusy = (value: boolean): void => {
     busy = value;
-    updateControls();
-  };
-
-  const resetTurnstile = (): void => {
-    turnstileToken = '';
-    if (widgetId) window.turnstile?.reset(widgetId);
     updateControls();
   };
 
@@ -177,7 +146,6 @@ export async function mountAuthPanel(): Promise<() => void> {
     try {
       const me = await api.getMe();
       renderSession(me.authenticated, me.userId);
-      if (!me.authenticated) await ensureTurnstile();
     } catch (error) {
       authenticated = false;
       badge.textContent = 'API ERROR';
@@ -193,31 +161,6 @@ export async function mountAuthPanel(): Promise<() => void> {
     recoveryOutput.hidden = false;
   };
 
-  const ensureTurnstile = async (): Promise<void> => {
-    if (widgetId) return;
-    await loadTurnstile();
-    if (!window.turnstile) throw new Error('Turnstile could not be loaded.');
-    widgetId = window.turnstile.render(turnstileHost, {
-      sitekey: TURNSTILE_SITE_KEY,
-      action: 'password-auth',
-      theme: 'dark',
-      callback: (token) => {
-        turnstileToken = token;
-        updateControls();
-      },
-      'expired-callback': () => {
-        turnstileToken = '';
-        result.textContent = 'セキュリティ確認の期限が切れました。再確認します。';
-        updateControls();
-      },
-      'error-callback': () => {
-        turnstileToken = '';
-        result.textContent = 'セキュリティ確認に失敗しました。通信状態を確認してください。';
-        updateControls();
-      },
-    });
-  };
-
   for (const button of modeButtons) {
     button.addEventListener('click', () => {
       const nextMode = button.dataset.mode as AuthMode | undefined;
@@ -228,13 +171,25 @@ export async function mountAuthPanel(): Promise<() => void> {
   }
 
   submitButton.addEventListener('click', async () => {
-    if (busy || !turnstileToken) return;
+    if (busy) return;
     const loginId = loginIdInput.value.trim();
     const password = passwordInput.value;
     const confirmPassword = confirmPasswordInput.value;
 
+    if (!loginId) {
+      result.textContent = 'ユーザーIDを入力してください。';
+      return;
+    }
+    if (password.length < 8) {
+      result.textContent = 'パスワードは8文字以上で入力してください。';
+      return;
+    }
     if ((mode === 'register' || mode === 'recover') && password !== confirmPassword) {
       result.textContent = 'パスワード確認が一致していません。';
+      return;
+    }
+    if (mode === 'recover' && !recoveryCodeInput.value.trim()) {
+      result.textContent = '復旧コードを入力してください。';
       return;
     }
 
@@ -244,11 +199,11 @@ export async function mountAuthPanel(): Promise<() => void> {
 
     try {
       if (mode === 'login') {
-        const session = await authApi.login({ loginId, password, turnstileToken });
+        const session = await authApi.login({ loginId, password });
         result.textContent = 'ログインしました。';
         renderSession(true, session.userId);
       } else if (mode === 'register') {
-        const session = await authApi.register({ loginId, password, turnstileToken });
+        const session = await authApi.register({ loginId, password });
         showRecoveryCode(session.recoveryCode);
         result.textContent = 'アカウントを作成しました。復旧コードを必ず保存してください。';
         renderSession(true, session.userId);
@@ -257,7 +212,6 @@ export async function mountAuthPanel(): Promise<() => void> {
           loginId,
           recoveryCode: recoveryCodeInput.value,
           newPassword: password,
-          turnstileToken,
         });
         showRecoveryCode(session.recoveryCode);
         result.textContent = 'パスワードを再設定しました。復旧コードも新しくなりました。';
@@ -267,7 +221,6 @@ export async function mountAuthPanel(): Promise<() => void> {
       console.error(error);
       result.textContent = friendlyError(error);
     } finally {
-      resetTurnstile();
       setBusy(false);
     }
   });
@@ -305,8 +258,6 @@ export async function mountAuthPanel(): Promise<() => void> {
       await authApi.logout();
       result.textContent = 'ログアウトしました。';
       renderSession(false);
-      await ensureTurnstile();
-      resetTurnstile();
     } catch (error) {
       console.error(error);
       result.textContent = friendlyError(error);
@@ -324,7 +275,7 @@ function friendlyError(error: unknown): string {
   if (error instanceof PasswordAuthApiError) {
     if (error.status === 401) return 'ユーザーID・パスワード、または復旧コードが正しくありません。';
     if (error.status === 409) return 'そのユーザーIDはすでに使われています。';
-    if (error.status === 403) return 'セキュリティ確認に失敗しました。もう一度試してください。';
+    if (error.status === 429) return '試行回数が多すぎます。少し時間を空けてから再度お試しください。';
     if (error.status === 400) return error.message;
   }
   if (error instanceof Error) {
@@ -334,33 +285,4 @@ function friendlyError(error: unknown): string {
     return error.message;
   }
   return '処理に失敗しました。';
-}
-
-async function loadTurnstile(): Promise<void> {
-  if (window.turnstile) return;
-  const existing = document.querySelector<HTMLScriptElement>('script[data-turnstile-script]');
-  if (existing) {
-    await waitForTurnstile();
-    return;
-  }
-
-  await new Promise<void>((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = TURNSTILE_SCRIPT;
-    script.async = true;
-    script.defer = true;
-    script.dataset.turnstileScript = 'true';
-    script.addEventListener('load', () => resolve(), { once: true });
-    script.addEventListener('error', () => reject(new Error('Turnstile script could not be loaded.')), { once: true });
-    document.head.appendChild(script);
-  });
-  await waitForTurnstile();
-}
-
-async function waitForTurnstile(): Promise<void> {
-  const timeoutAt = Date.now() + 8000;
-  while (!window.turnstile && Date.now() < timeoutAt) {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-  }
-  if (!window.turnstile) throw new Error('Turnstile initialization timed out.');
 }
