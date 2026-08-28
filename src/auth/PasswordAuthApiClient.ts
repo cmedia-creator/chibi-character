@@ -11,10 +11,21 @@ export interface PasswordRegisterResult extends PasswordAuthSessionResult {
   recoveryCode: string;
 }
 
+export interface PasswordParams {
+  salt: string;
+  iterations: number;
+}
+
 export class PasswordAuthApiClient {
+  getParams(loginId: string): Promise<PasswordParams> {
+    return this.request('/api/auth/password/params', { loginId });
+  }
+
   register(input: {
     loginId: string;
-    password: string;
+    verifier: string;
+    passwordSalt: string;
+    passwordIterations: number;
     turnstileToken: string;
   }): Promise<PasswordRegisterResult> {
     return this.request('/api/auth/password/register', input);
@@ -22,7 +33,7 @@ export class PasswordAuthApiClient {
 
   login(input: {
     loginId: string;
-    password: string;
+    verifier: string;
     turnstileToken: string;
   }): Promise<PasswordAuthSessionResult> {
     return this.request('/api/auth/password/login', input);
@@ -31,7 +42,9 @@ export class PasswordAuthApiClient {
   recover(input: {
     loginId: string;
     recoveryCode: string;
-    newPassword: string;
+    newVerifier: string;
+    passwordSalt: string;
+    passwordIterations: number;
     turnstileToken: string;
   }): Promise<PasswordRegisterResult> {
     return this.request('/api/auth/password/recover', input);
