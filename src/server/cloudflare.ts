@@ -31,4 +31,5 @@ export interface WorkerBindings {
   ASSETS?: FetcherBinding;
   SHARE_ASSETS?: R2BucketBinding;
   TURNSTILE_SECRET?: string;
+  PASSWORD_PEPPER?: string;
 }
