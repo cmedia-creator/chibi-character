@@ -9,6 +9,8 @@ on:
       - 'src/server/**'
       - 'src/auth/PasswordAuthApiClient.ts'
       - 'src/auth/PasswordKdfClient.ts'
+      - 'src/auth/AuthPanel.ts'
+      - 'migrations/**'
       - 'wrangler.jsonc'
 
 permissions:
@@ -58,7 +60,7 @@ jobs:
           echo "$body" | grep -q '"iterations":120000'
           echo "$body" | grep -q '"salt"'
 
-      - name: Check password registration requires Turnstile
+      - name: Check registration no longer requires Turnstile
         shell: bash
         run: |
           set -euo pipefail
@@ -70,9 +72,9 @@ jobs:
             https://chibi-character.c-media-satoru.workers.dev/api/auth/password/register)
           cat "$tmp"
           test "$code" = '400'
-          grep -q 'Turnstile token is required' "$tmp"
+          grep -q 'Login ID must be' "$tmp"
 
-      - name: Check invalid Turnstile token fails safely
+      - name: Check invalid password login fails safely
         shell: bash
         run: |
           set -euo pipefail
@@ -80,8 +82,8 @@ jobs:
           code=$(curl -sS -o "$tmp" -w '%{http_code}' \
             -X POST \
             -H 'content-type: application/json' \
-            --data '{"turnstileToken":"not-a-valid-turnstile-token"}' \
+            --data '{"loginId":"smoke-probe","verifier":"invalid"}' \
             https://chibi-character.c-media-satoru.workers.dev/api/auth/password/login)
           cat "$tmp"
-          test "$code" = '403'
-          grep -q 'Human verification failed' "$tmp"
+          test "$code" = '401'
+          grep -q 'Login ID or password is incorrect' "$tmp"
