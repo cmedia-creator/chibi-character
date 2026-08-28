@@ -62,6 +62,7 @@ jobs:
           const required = [
             'users',
             'passkey_credentials',
+            'password_credentials',
             'webauthn_challenges',
             'sessions',
             'characters',
