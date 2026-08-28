@@ -1,0 +1,53 @@
+name: live-api-smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/live-api-smoke.yml'
+      - 'src/server/**'
+      - 'wrangler.jsonc'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check /api/me
+        shell: bash
+        run: |
+          set -euo pipefail
+          body=$(curl -fsS https://chibi-character.c-media-satoru.workers.dev/api/me)
+          echo "$body"
+          echo "$body" | grep -q '"authenticated":false'
+
+      - name: Check Turnstile secret is wired
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp=$(mktemp)
+          code=$(curl -sS -o "$tmp" -w '%{http_code}' \
+            -X POST \
+            -H 'content-type: application/json' \
+            --data '{}' \
+            https://chibi-character.c-media-satoru.workers.dev/api/auth/register/options)
+          cat "$tmp"
+          test "$code" = '400'
+          grep -q 'Turnstile token is required' "$tmp"
+
+      - name: Check login options reach D1-backed auth
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp=$(mktemp)
+          code=$(curl -sS -o "$tmp" -w '%{http_code}' \
+            -X POST \
+            -H 'content-type: application/json' \
+            --data '{}' \
+            https://chibi-character.c-media-satoru.workers.dev/api/auth/login/options)
+          cat "$tmp"
+          test "$code" = '200'
+          grep -q '"challenge"' "$tmp"
