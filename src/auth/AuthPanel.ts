@@ -1,9 +1,12 @@
 import './auth-panel.css';
 import { ApiClient } from '../api/ApiClient';
+import type { SavedCharacter } from '../api/contracts';
 import { SyncService } from '../data/SyncService';
 import { PasswordAuthApiClient, PasswordAuthApiError } from './PasswordAuthApiClient';
 
 type AuthMode = 'login' | 'register' | 'recover';
+
+type CharacterSource = 'saved' | 'restored';
 
 export async function mountAuthPanel(): Promise<() => void> {
   const authApi = new PasswordAuthApiClient();
@@ -104,6 +107,27 @@ export async function mountAuthPanel(): Promise<() => void> {
     updateControls();
   };
 
+  const publishCharacterSource = (character: SavedCharacter, source: CharacterSource): void => {
+    window.dispatchEvent(new CustomEvent('chibi:character-source', {
+      detail: {
+        id: character.id,
+        name: character.name,
+        updatedAt: character.updatedAt,
+        source,
+      },
+    }));
+  };
+
+  const restoreSavedCharacter = async (announce: boolean): Promise<SavedCharacter | null> => {
+    const character = await sync.restoreCharacterFromServer();
+    if (!character) return null;
+    publishCharacterSource(character, 'restored');
+    if (announce) {
+      result.textContent = `D1復元成功 / character ${character.id.slice(0, 8)}…`;
+    }
+    return character;
+  };
+
   const applyMode = (nextMode: AuthMode): void => {
     mode = nextMode;
     for (const button of modeButtons) {
@@ -146,6 +170,14 @@ export async function mountAuthPanel(): Promise<() => void> {
     try {
       const me = await api.getMe();
       renderSession(me.authenticated, me.userId);
+      if (me.authenticated) {
+        try {
+          await restoreSavedCharacter(true);
+        } catch (error) {
+          console.error('Saved character restore failed.', error);
+          result.textContent = `ログイン済み / キャラ復元失敗: ${friendlyError(error)}`;
+        }
+      }
     } catch (error) {
       authenticated = false;
       badge.textContent = 'API ERROR';
@@ -200,8 +232,11 @@ export async function mountAuthPanel(): Promise<() => void> {
     try {
       if (mode === 'login') {
         const session = await authApi.login({ loginId, password });
-        result.textContent = 'ログインしました。';
         renderSession(true, session.userId);
+        const restored = await restoreSavedCharacter(false);
+        result.textContent = restored
+          ? `ログイン成功 / D1復元 ${restored.id.slice(0, 8)}…`
+          : 'ログインしました。保存済みキャラはまだありません。';
       } else if (mode === 'register') {
         const session = await authApi.register({ loginId, password });
         showRecoveryCode(session.recoveryCode);
@@ -214,8 +249,11 @@ export async function mountAuthPanel(): Promise<() => void> {
           newPassword: password,
         });
         showRecoveryCode(session.recoveryCode);
-        result.textContent = 'パスワードを再設定しました。復旧コードも新しくなりました。';
         renderSession(true, session.userId);
+        const restored = await restoreSavedCharacter(false);
+        result.textContent = restored
+          ? `パスワード再設定成功 / D1復元 ${restored.id.slice(0, 8)}…`
+          : 'パスワードを再設定しました。復旧コードも新しくなりました。';
       }
     } catch (error) {
       console.error(error);
@@ -242,6 +280,7 @@ export async function mountAuthPanel(): Promise<() => void> {
     result.textContent = 'TEST CHARACTER 01をD1へ保存中…';
     try {
       const saved = await sync.saveTestCharacter();
+      publishCharacterSource(saved, 'saved');
       result.textContent = `D1保存成功 / character ${saved.id.slice(0, 8)}…`;
     } catch (error) {
       console.error(error);

@@ -59,6 +59,17 @@ export class SyncService {
     return result.character;
   }
 
+  /**
+   * Restores only the authoritative character needed by the current screen.
+   * This deliberately avoids profile/entitlement reads during the save-flow Gate.
+   */
+  async restoreCharacterFromServer(): Promise<SavedCharacter | null> {
+    const characters = await this.api.getCharacters();
+    const character = characters[0] ?? null;
+    if (character) await this.drafts.saveCharacterDraft(character.draft);
+    return character;
+  }
+
   /** Explicitly persists the current local oshi profile draft. */
   async saveProfile(slugInput: string): Promise<SavedProfile> {
     const profile = await this.requireProfileDraft();
