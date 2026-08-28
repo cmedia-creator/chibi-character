@@ -2,7 +2,12 @@ import { ApiClient } from '../api/ApiClient';
 import type { SavedCharacter, SavedProfile } from '../api/contracts';
 import { validateProfileSlug } from '../profile/slug';
 import { DraftStore } from './DraftStore';
-import type { CharacterDraft, EntitlementSnapshot, OshiProfileDraft } from './models';
+import {
+  createEmptyCharacterDraft,
+  type CharacterDraft,
+  type EntitlementSnapshot,
+  type OshiProfileDraft,
+} from './models';
 
 export interface SyncSnapshot {
   authenticated: boolean;
@@ -28,6 +33,27 @@ export class SyncService {
    */
   async saveCharacter(characterId?: string): Promise<SavedCharacter> {
     const draft = await this.requireCharacterDraft();
+    const result = await this.api.saveCharacter({ characterId, draft });
+    await this.drafts.saveCharacterDraft(result.character.draft);
+    return result.character;
+  }
+
+  /**
+   * Technical-prototype helper: if CREATE has not produced a local draft yet,
+   * bootstrap a minimal draft that represents the on-screen test character and
+   * persist it through the exact same explicit D1 save path.
+   */
+  async saveTestCharacter(characterId?: string): Promise<SavedCharacter> {
+    let draft = await this.drafts.loadCharacterDraft();
+    if (!draft) {
+      draft = createEmptyCharacterDraft();
+      draft.name = 'TEST CHARACTER 01';
+      draft.appearance.parts = {
+        preset: 'test-character-01',
+      };
+      await this.drafts.saveCharacterDraft(draft);
+    }
+
     const result = await this.api.saveCharacter({ characterId, draft });
     await this.drafts.saveCharacterDraft(result.character.draft);
     return result.character;
