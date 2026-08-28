@@ -26,7 +26,6 @@ export class PasswordAuthApiClient {
   async register(input: {
     loginId: string;
     password: string;
-    turnstileToken: string;
   }): Promise<PasswordRegisterResult> {
     const material = await createPasswordMaterial(input.password);
     return this.request('/api/auth/password/register', {
@@ -34,14 +33,12 @@ export class PasswordAuthApiClient {
       verifier: material.verifier,
       passwordSalt: material.salt,
       passwordIterations: material.iterations,
-      turnstileToken: input.turnstileToken,
     });
   }
 
   async login(input: {
     loginId: string;
     password: string;
-    turnstileToken: string;
   }): Promise<PasswordAuthSessionResult> {
     const params = await this.getParams(input.loginId);
     const verifier = await derivePasswordVerifier(
@@ -52,7 +49,6 @@ export class PasswordAuthApiClient {
     return this.request('/api/auth/password/login', {
       loginId: input.loginId,
       verifier,
-      turnstileToken: input.turnstileToken,
     });
   }
 
@@ -60,7 +56,6 @@ export class PasswordAuthApiClient {
     loginId: string;
     recoveryCode: string;
     newPassword: string;
-    turnstileToken: string;
   }): Promise<PasswordRegisterResult> {
     const material = await createPasswordMaterial(input.newPassword);
     return this.request('/api/auth/password/recover', {
@@ -69,7 +64,6 @@ export class PasswordAuthApiClient {
       newVerifier: material.verifier,
       passwordSalt: material.salt,
       passwordIterations: material.iterations,
-      turnstileToken: input.turnstileToken,
     });
   }
 
