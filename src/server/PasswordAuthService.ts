@@ -1,40 +1,66 @@
 import { D1AuthStore } from './D1AuthStore';
 import { HttpError } from './http';
 import {
+  clientKdfIterations,
+  fakePasswordSalt,
   generateRecoveryCode,
-  hashPassword,
+  generateRecoverySalt,
+  hashPasswordVerifier,
+  hashRecoveryCode,
+  isValidClientIterations,
+  isValidPasswordSalt,
+  isValidVerifier,
   normalizeRecoveryCode,
-  verifyPassword,
+  timingSafeStringEqual,
 } from './PasswordCrypto';
 import { PasswordAuthStore } from './PasswordAuthStore';
 
 const LOGIN_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._-]{3,23}$/;
-const MIN_PASSWORD_LENGTH = 8;
-const MAX_PASSWORD_LENGTH = 128;
 
 export class PasswordAuthService {
   constructor(
     private readonly credentials: PasswordAuthStore,
     private readonly sessions: D1AuthStore,
-  ) {}
+    private readonly pepper: string,
+  ) {
+    if (!pepper) throw new Error('Password pepper is required.');
+  }
+
+  async params(loginIdInput: string): Promise<{ salt: string; iterations: number }> {
+    const loginId = normalizeLoginId(loginIdInput);
+    const credential = await this.credentials.credentialByLoginId(loginId);
+    if (credential) {
+      return {
+        salt: credential.passwordSalt,
+        iterations: credential.passwordIterations,
+      };
+    }
+    return {
+      salt: await fakePasswordSalt(this.pepper, loginId),
+      iterations: clientKdfIterations(),
+    };
+  }
 
   async register(input: {
     loginId: string;
-    password: string;
+    verifier: string;
+    passwordSalt: string;
+    passwordIterations: number;
     now?: number;
   }): Promise<{ userId: string; recoveryCode: string; session: { token: string; expiresAt: number } }> {
     const now = input.now ?? Date.now();
     const loginId = normalizeLoginId(input.loginId);
-    validatePassword(input.password);
+    validateClientPasswordMaterial(input.verifier, input.passwordSalt, input.passwordIterations);
 
     if (await this.credentials.credentialByLoginId(loginId)) {
       throw new HttpError(409, 'conflict', 'This login ID is already in use.');
     }
 
     const recoveryCode = generateRecoveryCode();
+    const recoverySalt = generateRecoverySalt();
     const [passwordHash, recoveryHash] = await Promise.all([
-      hashPassword(input.password),
-      hashPassword(normalizeRecoveryCode(recoveryCode)),
+      hashPasswordVerifier(this.pepper, loginId, input.verifier),
+      hashRecoveryCode(this.pepper, recoverySalt, recoveryCode),
     ]);
     const userId = crypto.randomUUID();
 
@@ -42,12 +68,12 @@ export class PasswordAuthService {
       await this.credentials.createUserWithCredential({
         userId,
         loginId,
-        passwordSalt: passwordHash.salt,
-        passwordHash: passwordHash.hash,
-        passwordIterations: passwordHash.iterations,
-        recoverySalt: recoveryHash.salt,
-        recoveryHash: recoveryHash.hash,
-        recoveryIterations: recoveryHash.iterations,
+        passwordSalt: input.passwordSalt,
+        passwordHash,
+        passwordIterations: input.passwordIterations,
+        recoverySalt,
+        recoveryHash,
+        recoveryIterations: 0,
         createdAt: now,
         updatedAt: now,
       });
@@ -64,23 +90,18 @@ export class PasswordAuthService {
 
   async login(input: {
     loginId: string;
-    password: string;
+    verifier: string;
     now?: number;
   }): Promise<{ userId: string; session: { token: string; expiresAt: number } }> {
     const now = input.now ?? Date.now();
     const loginId = normalizeLoginId(input.loginId);
-    validatePassword(input.password);
+    if (!isValidVerifier(input.verifier)) throw invalidCredentials();
 
     const credential = await this.credentials.credentialByLoginId(loginId);
-    if (!credential) throw invalidCredentials();
-
-    const verified = await verifyPassword(
-      input.password,
-      credential.passwordSalt,
-      credential.passwordHash,
-      credential.passwordIterations,
-    );
-    if (!verified) throw invalidCredentials();
+    const candidateHash = await hashPasswordVerifier(this.pepper, loginId, input.verifier);
+    if (!credential || !timingSafeStringEqual(candidateHash, credential.passwordHash)) {
+      throw invalidCredentials();
+    }
 
     const session = await this.sessions.createSession(credential.userId, now);
     return { userId: credential.userId, session };
@@ -89,41 +110,45 @@ export class PasswordAuthService {
   async recover(input: {
     loginId: string;
     recoveryCode: string;
-    newPassword: string;
+    newVerifier: string;
+    passwordSalt: string;
+    passwordIterations: number;
     now?: number;
   }): Promise<{ userId: string; recoveryCode: string; session: { token: string; expiresAt: number } }> {
     const now = input.now ?? Date.now();
     const loginId = normalizeLoginId(input.loginId);
     const recoveryCode = normalizeRecoveryCode(input.recoveryCode);
-    validatePassword(input.newPassword);
+    validateClientPasswordMaterial(input.newVerifier, input.passwordSalt, input.passwordIterations);
     if (recoveryCode.length < 20 || recoveryCode.length > 64) throw invalidRecovery();
 
     const credential = await this.credentials.credentialByLoginId(loginId);
     if (!credential) throw invalidRecovery();
 
-    const verified = await verifyPassword(
-      recoveryCode,
+    const candidateRecoveryHash = await hashRecoveryCode(
+      this.pepper,
       credential.recoverySalt,
-      credential.recoveryHash,
-      credential.recoveryIterations,
+      recoveryCode,
     );
-    if (!verified) throw invalidRecovery();
+    if (!timingSafeStringEqual(candidateRecoveryHash, credential.recoveryHash)) {
+      throw invalidRecovery();
+    }
 
     const nextRecoveryCode = generateRecoveryCode();
+    const nextRecoverySalt = generateRecoverySalt();
     const [passwordHash, recoveryHash] = await Promise.all([
-      hashPassword(input.newPassword),
-      hashPassword(normalizeRecoveryCode(nextRecoveryCode)),
+      hashPasswordVerifier(this.pepper, loginId, input.newVerifier),
+      hashRecoveryCode(this.pepper, nextRecoverySalt, nextRecoveryCode),
     ]);
 
     await this.credentials.revokeAllSessionsForUser(credential.userId);
     await this.credentials.updatePassword({
       userId: credential.userId,
-      passwordSalt: passwordHash.salt,
-      passwordHash: passwordHash.hash,
-      passwordIterations: passwordHash.iterations,
-      recoverySalt: recoveryHash.salt,
-      recoveryHash: recoveryHash.hash,
-      recoveryIterations: recoveryHash.iterations,
+      passwordSalt: input.passwordSalt,
+      passwordHash,
+      passwordIterations: input.passwordIterations,
+      recoverySalt: nextRecoverySalt,
+      recoveryHash,
+      recoveryIterations: 0,
       updatedAt: now,
     });
 
@@ -144,9 +169,13 @@ export function normalizeLoginId(value: string): string {
   return loginId;
 }
 
-function validatePassword(value: string): void {
-  if (typeof value !== 'string' || value.length < MIN_PASSWORD_LENGTH || value.length > MAX_PASSWORD_LENGTH) {
-    throw new HttpError(400, 'bad_request', 'Password must be 8-128 characters.');
+function validateClientPasswordMaterial(
+  verifier: string,
+  salt: string,
+  iterations: number,
+): void {
+  if (!isValidVerifier(verifier) || !isValidPasswordSalt(salt) || !isValidClientIterations(iterations)) {
+    throw new HttpError(400, 'bad_request', 'Password verification material is invalid.');
   }
 }
 
