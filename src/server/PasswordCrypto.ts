@@ -47,10 +47,16 @@ export function normalizeRecoveryCode(value: string): string {
   return value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
 }
 
-async function derive(value: string, salt: Uint8Array, iterations: number): Promise<Uint8Array> {
+async function derive(
+  value: string,
+  saltInput: Uint8Array,
+  iterations: number,
+): Promise<Uint8Array<ArrayBuffer>> {
+  const salt = toArrayBufferBackedUint8Array(saltInput);
+  const materialBytes = toArrayBufferBackedUint8Array(new TextEncoder().encode(value));
   const material = await crypto.subtle.importKey(
     'raw',
-    new TextEncoder().encode(value),
+    materialBytes,
     { name: 'PBKDF2' },
     false,
     ['deriveBits'],
@@ -68,8 +74,8 @@ async function derive(value: string, salt: Uint8Array, iterations: number): Prom
   return new Uint8Array(bits);
 }
 
-function randomBytes(length: number): Uint8Array {
-  const bytes = new Uint8Array(length);
+function randomBytes(length: number): Uint8Array<ArrayBuffer> {
+  const bytes = new Uint8Array(new ArrayBuffer(length));
   crypto.getRandomValues(bytes);
   return bytes;
 }
@@ -87,10 +93,16 @@ function base64urlEncode(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
-function base64urlDecode(value: string): Uint8Array {
+function base64urlDecode(value: string): Uint8Array<ArrayBuffer> {
   const padded = value.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(value.length / 4) * 4, '=');
   const binary = atob(padded);
-  const bytes = new Uint8Array(binary.length);
+  const bytes = new Uint8Array(new ArrayBuffer(binary.length));
   for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
   return bytes;
+}
+
+function toArrayBufferBackedUint8Array(value: Uint8Array): Uint8Array<ArrayBuffer> {
+  const copy = new Uint8Array(new ArrayBuffer(value.byteLength));
+  copy.set(value);
+  return copy;
 }
