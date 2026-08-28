@@ -36,49 +36,65 @@ export class TurnstileVerifier {
 
   async verify(input: TurnstileVerifyInput): Promise<TurnstileVerificationResult> {
     if (!input.token || input.token.length > 4096) {
-      return {
-        success: false,
-        challengeTimestamp: null,
-        hostname: null,
-        action: null,
-        cdata: null,
-        errorCodes: ['invalid-input-response'],
-      };
+      return failureResult(['invalid-input-response']);
     }
 
-    const body = new FormData();
-    body.set('secret', this.secret);
-    body.set('response', input.token);
+    const body = new URLSearchParams({
+      secret: this.secret,
+      response: input.token,
+    });
     if (input.remoteIp) body.set('remoteip', input.remoteIp);
     if (input.idempotencyKey) body.set('idempotency_key', input.idempotencyKey);
 
-    const response = await this.fetcher(SITEVERIFY_URL, {
-      method: 'POST',
-      body,
-    });
-    if (!response.ok) throw new Error(`Turnstile Siteverify HTTP ${response.status}`);
+    try {
+      const response = await this.fetcher(SITEVERIFY_URL, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body,
+        signal: AbortSignal.timeout(10_000),
+      });
 
-    const payload = await response.json() as SiteverifyResponse;
-    const hostname = payload.hostname ?? null;
-    const action = payload.action ?? null;
-    const hostnameMatches = !input.expectedHostname || hostname === input.expectedHostname;
-    const actionMatches = !input.expectedAction || action === input.expectedAction;
+      if (!response.ok) {
+        console.error('Turnstile Siteverify HTTP error', response.status);
+        return failureResult([`siteverify-http-${response.status}`]);
+      }
 
-    return {
-      success: Boolean(payload.success) && hostnameMatches && actionMatches,
-      challengeTimestamp: payload.challenge_ts ?? null,
-      hostname,
-      action,
-      cdata: payload.cdata ?? null,
-      errorCodes: [
-        ...(payload['error-codes'] ?? []),
-        ...(!hostnameMatches ? ['hostname-mismatch'] : []),
-        ...(!actionMatches ? ['action-mismatch'] : []),
-      ],
-    };
+      const payload = await response.json() as SiteverifyResponse;
+      const hostname = payload.hostname ?? null;
+      const action = payload.action ?? null;
+      const hostnameMatches = !input.expectedHostname || hostname === input.expectedHostname;
+      const actionMatches = !input.expectedAction || action === input.expectedAction;
+
+      return {
+        success: Boolean(payload.success) && hostnameMatches && actionMatches,
+        challengeTimestamp: payload.challenge_ts ?? null,
+        hostname,
+        action,
+        cdata: payload.cdata ?? null,
+        errorCodes: [
+          ...(payload['error-codes'] ?? []),
+          ...(!hostnameMatches ? ['hostname-mismatch'] : []),
+          ...(!actionMatches ? ['action-mismatch'] : []),
+        ],
+      };
+    } catch (error) {
+      console.error('Turnstile Siteverify request failed', error);
+      return failureResult(['siteverify-request-failed']);
+    }
   }
 }
 
 export function clientIpFromRequest(request: Request): string | null {
   return request.headers.get('CF-Connecting-IP');
+}
+
+function failureResult(errorCodes: string[]): TurnstileVerificationResult {
+  return {
+    success: false,
+    challengeTimestamp: null,
+    hostname: null,
+    action: null,
+    cdata: null,
+    errorCodes,
+  };
 }
