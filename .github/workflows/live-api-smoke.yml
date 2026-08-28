@@ -38,6 +38,20 @@ jobs:
           test "$code" = '400'
           grep -q 'Turnstile token is required' "$tmp"
 
+      - name: Check invalid Turnstile token fails safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp=$(mktemp)
+          code=$(curl -sS -o "$tmp" -w '%{http_code}' \
+            -X POST \
+            -H 'content-type: application/json' \
+            --data '{"turnstileToken":"not-a-valid-turnstile-token"}' \
+            https://chibi-character.c-media-satoru.workers.dev/api/auth/register/options)
+          cat "$tmp"
+          test "$code" = '403'
+          grep -q 'Human verification failed' "$tmp"
+
       - name: Check login options reach D1-backed auth
         shell: bash
         run: |
