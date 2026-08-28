@@ -3,6 +3,7 @@ import { clientIpFromRequest, TurnstileVerifier } from './TurnstileVerifier';
 
 export type ProtectedAction =
   | 'passkey-register'
+  | 'password-auth'
   | 'profile-publish'
   | 'share-asset-create';
 

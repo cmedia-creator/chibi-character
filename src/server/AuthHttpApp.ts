@@ -6,6 +6,8 @@ import { AbuseGuard } from './AbuseGuard';
 import { D1AuthStore } from './D1AuthStore';
 import { HttpError, jsonError, jsonSuccess, readJsonBody } from './http';
 import { PasskeyService, relyingPartyFromRequest } from './PasskeyService';
+import { PasswordAuthService } from './PasswordAuthService';
+import { PasswordAuthStore } from './PasswordAuthStore';
 import { clearSessionCookie, createSessionCookie } from './sessionCookie';
 import { readCookie } from './session';
 import { TurnstileVerifier } from './TurnstileVerifier';
@@ -14,6 +16,21 @@ import type { D1Database } from './cloudflare';
 const SESSION_COOKIE = 'chibi_session';
 
 type RegisterOptionsBody = {
+  turnstileToken?: unknown;
+};
+
+type PasswordRegisterBody = {
+  loginId?: unknown;
+  password?: unknown;
+  turnstileToken?: unknown;
+};
+
+type PasswordLoginBody = PasswordRegisterBody;
+
+type PasswordRecoverBody = {
+  loginId?: unknown;
+  recoveryCode?: unknown;
+  newPassword?: unknown;
   turnstileToken?: unknown;
 };
 
@@ -28,8 +45,64 @@ export class AuthHttpApp {
     const now = Date.now();
     const store = new D1AuthStore(this.db);
     const passkeys = new PasskeyService(store, relyingPartyFromRequest(request));
+    const passwordAuth = new PasswordAuthService(new PasswordAuthStore(this.db), store);
 
     try {
+      if (request.method === 'POST' && url.pathname === '/api/auth/password/register') {
+        const raw = await readJsonBody<PasswordRegisterBody>(request);
+        await this.requirePasswordTurnstile(request, raw.turnstileToken);
+        const result = await passwordAuth.register({
+          loginId: asString(raw.loginId),
+          password: asString(raw.password),
+          now,
+        });
+        return withSessionCookie(
+          jsonSuccess({
+            userId: result.userId,
+            authenticated: true,
+            recoveryCode: result.recoveryCode,
+          }),
+          result.session.token,
+          result.session.expiresAt,
+        );
+      }
+
+      if (request.method === 'POST' && url.pathname === '/api/auth/password/login') {
+        const raw = await readJsonBody<PasswordLoginBody>(request);
+        await this.requirePasswordTurnstile(request, raw.turnstileToken);
+        const result = await passwordAuth.login({
+          loginId: asString(raw.loginId),
+          password: asString(raw.password),
+          now,
+        });
+        return withSessionCookie(
+          jsonSuccess({ userId: result.userId, authenticated: true }),
+          result.session.token,
+          result.session.expiresAt,
+        );
+      }
+
+      if (request.method === 'POST' && url.pathname === '/api/auth/password/recover') {
+        const raw = await readJsonBody<PasswordRecoverBody>(request);
+        await this.requirePasswordTurnstile(request, raw.turnstileToken);
+        const result = await passwordAuth.recover({
+          loginId: asString(raw.loginId),
+          recoveryCode: asString(raw.recoveryCode),
+          newPassword: asString(raw.newPassword),
+          now,
+        });
+        return withSessionCookie(
+          jsonSuccess({
+            userId: result.userId,
+            authenticated: true,
+            recoveryCode: result.recoveryCode,
+          }),
+          result.session.token,
+          result.session.expiresAt,
+        );
+      }
+
+      // Legacy Passkey routes remain dormant during the MVP transition.
       if (request.method === 'POST' && url.pathname === '/api/auth/register/options') {
         if (!this.turnstileSecret) {
           return jsonError(503, 'internal_error', 'Human verification is not configured.');
@@ -91,6 +164,18 @@ export class AuthHttpApp {
       return jsonError(500, 'internal_error', 'Internal server error.');
     }
   }
+
+  private async requirePasswordTurnstile(request: Request, rawToken: unknown): Promise<void> {
+    if (!this.turnstileSecret) {
+      throw new HttpError(503, 'internal_error', 'Human verification is not configured.');
+    }
+    const token = typeof rawToken === 'string' ? rawToken : '';
+    if (!token || token.length > 4096) {
+      throw new HttpError(400, 'bad_request', 'Turnstile token is required.');
+    }
+    const guard = new AbuseGuard(new TurnstileVerifier(this.turnstileSecret));
+    await guard.requireTurnstile(request, token, 'password-auth');
+  }
 }
 
 function withSessionCookie(
@@ -100,4 +185,8 @@ function withSessionCookie(
 ): Response {
   response.headers.set('Set-Cookie', createSessionCookie(token, expiresAt));
   return response;
+}
+
+function asString(value: unknown): string {
+  return typeof value === 'string' ? value : '';
 }
