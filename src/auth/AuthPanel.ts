@@ -73,6 +73,11 @@ export async function mountAuthPanel(): Promise<() => void> {
     logoutButton.disabled = value || badge.dataset.authenticated !== 'true';
   };
 
+  const resetTurnstile = (): void => {
+    turnstileToken = '';
+    if (widgetId) window.turnstile?.reset(widgetId);
+  };
+
   const refreshSession = async (): Promise<void> => {
     try {
       const me = await api.getMe();
@@ -127,12 +132,12 @@ export async function mountAuthPanel(): Promise<() => void> {
       const credential = await createPasskey(start.options);
       const session = await authApi.finishRegistration(credential);
       result.textContent = `Passkey登録成功。session開始 / ${session.userId.slice(0, 8)}…`;
-      turnstileToken = '';
-      window.turnstile?.reset(widgetId);
       await refreshSession();
     } catch (error) {
       console.error(error);
       result.textContent = error instanceof Error ? error.message : 'Passkey登録に失敗しました。';
+    } finally {
+      resetTurnstile();
       setBusy(false);
     }
   });
