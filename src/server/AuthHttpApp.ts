@@ -3,6 +3,7 @@ import type {
   RegistrationResponseJSON,
 } from '@simplewebauthn/server';
 import { AbuseGuard } from './AbuseGuard';
+import { AuthRateLimiter } from './AuthRateLimiter';
 import { D1AuthStore } from './D1AuthStore';
 import { HttpError, jsonError, jsonSuccess, readJsonBody } from './http';
 import { PasskeyService, relyingPartyFromRequest } from './PasskeyService';
@@ -14,6 +15,8 @@ import { TurnstileVerifier } from './TurnstileVerifier';
 import type { D1Database } from './cloudflare';
 
 const SESSION_COOKIE = 'chibi_session';
+const HOUR = 60 * 60 * 1000;
+const FIFTEEN_MINUTES = 15 * 60 * 1000;
 
 type RegisterOptionsBody = {
   turnstileToken?: unknown;
@@ -28,13 +31,11 @@ type PasswordRegisterBody = {
   verifier?: unknown;
   passwordSalt?: unknown;
   passwordIterations?: unknown;
-  turnstileToken?: unknown;
 };
 
 type PasswordLoginBody = {
   loginId?: unknown;
   verifier?: unknown;
-  turnstileToken?: unknown;
 };
 
 type PasswordRecoverBody = {
@@ -43,7 +44,6 @@ type PasswordRecoverBody = {
   newVerifier?: unknown;
   passwordSalt?: unknown;
   passwordIterations?: unknown;
-  turnstileToken?: unknown;
 };
 
 export class AuthHttpApp {
@@ -61,6 +61,9 @@ export class AuthHttpApp {
     const passwordAuth = this.passwordPepper
       ? new PasswordAuthService(new PasswordAuthStore(this.db), store, this.passwordPepper)
       : null;
+    const rateLimiter = this.passwordPepper
+      ? new AuthRateLimiter(this.db, this.passwordPepper)
+      : null;
 
     try {
       if (request.method === 'POST' && url.pathname === '/api/auth/password/params') {
@@ -71,8 +74,9 @@ export class AuthHttpApp {
 
       if (request.method === 'POST' && url.pathname === '/api/auth/password/register') {
         const service = requirePasswordService(passwordAuth);
+        const limiter = requireRateLimiter(rateLimiter);
         const raw = await readJsonBody<PasswordRegisterBody>(request);
-        await this.requirePasswordTurnstile(request, raw.turnstileToken);
+        await limiter.consume(request, 'register', 10, HOUR, now);
         const result = await service.register({
           loginId: asString(raw.loginId),
           verifier: asString(raw.verifier),
@@ -93,8 +97,9 @@ export class AuthHttpApp {
 
       if (request.method === 'POST' && url.pathname === '/api/auth/password/login') {
         const service = requirePasswordService(passwordAuth);
+        const limiter = requireRateLimiter(rateLimiter);
         const raw = await readJsonBody<PasswordLoginBody>(request);
-        await this.requirePasswordTurnstile(request, raw.turnstileToken);
+        await limiter.consume(request, 'login', 60, FIFTEEN_MINUTES, now);
         const result = await service.login({
           loginId: asString(raw.loginId),
           verifier: asString(raw.verifier),
@@ -109,8 +114,9 @@ export class AuthHttpApp {
 
       if (request.method === 'POST' && url.pathname === '/api/auth/password/recover') {
         const service = requirePasswordService(passwordAuth);
+        const limiter = requireRateLimiter(rateLimiter);
         const raw = await readJsonBody<PasswordRecoverBody>(request);
-        await this.requirePasswordTurnstile(request, raw.turnstileToken);
+        await limiter.consume(request, 'recover', 10, HOUR, now);
         const result = await service.recover({
           loginId: asString(raw.loginId),
           recoveryCode: asString(raw.recoveryCode),
@@ -192,18 +198,6 @@ export class AuthHttpApp {
       return jsonError(500, 'internal_error', 'Internal server error.');
     }
   }
-
-  private async requirePasswordTurnstile(request: Request, rawToken: unknown): Promise<void> {
-    if (!this.turnstileSecret) {
-      throw new HttpError(503, 'internal_error', 'Human verification is not configured.');
-    }
-    const token = typeof rawToken === 'string' ? rawToken : '';
-    if (!token || token.length > 4096) {
-      throw new HttpError(400, 'bad_request', 'Turnstile token is required.');
-    }
-    const guard = new AbuseGuard(new TurnstileVerifier(this.turnstileSecret));
-    await guard.requireTurnstile(request, token, 'password-auth');
-  }
 }
 
 function withSessionCookie(
@@ -218,6 +212,11 @@ function withSessionCookie(
 function requirePasswordService(service: PasswordAuthService | null): PasswordAuthService {
   if (!service) throw new HttpError(503, 'internal_error', 'Password authentication is not configured.');
   return service;
+}
+
+function requireRateLimiter(limiter: AuthRateLimiter | null): AuthRateLimiter {
+  if (!limiter) throw new HttpError(503, 'internal_error', 'Authentication rate limiting is not configured.');
+  return limiter;
 }
 
 function asString(value: unknown): string {
