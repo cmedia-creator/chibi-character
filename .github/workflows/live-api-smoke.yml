@@ -7,6 +7,8 @@ on:
     paths:
       - '.github/workflows/live-api-smoke.yml'
       - 'src/server/**'
+      - 'src/auth/PasswordAuthApiClient.ts'
+      - 'src/auth/PasswordKdfClient.ts'
       - 'wrangler.jsonc'
 
 permissions:
@@ -16,6 +18,25 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
+      - name: Wait for latest Worker deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 24); do
+            tmp=$(mktemp)
+            code=$(curl -sS -o "$tmp" -w '%{http_code}' \
+              -X POST \
+              -H 'content-type: application/json' \
+              --data '{"loginId":"smoke-probe"}' \
+              https://chibi-character.c-media-satoru.workers.dev/api/auth/password/params || true)
+            if [ "$code" = '200' ] && grep -q '"iterations":120000' "$tmp"; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo 'Latest password-auth Worker did not become ready.'
+          exit 1
+
       - name: Check /api/me
         shell: bash
         run: |
@@ -24,7 +45,20 @@ jobs:
           echo "$body"
           echo "$body" | grep -q '"authenticated":false'
 
-      - name: Check Turnstile secret is wired
+      - name: Check password KDF params
+        shell: bash
+        run: |
+          set -euo pipefail
+          body=$(curl -fsS \
+            -X POST \
+            -H 'content-type: application/json' \
+            --data '{"loginId":"smoke-probe"}' \
+            https://chibi-character.c-media-satoru.workers.dev/api/auth/password/params)
+          echo "$body"
+          echo "$body" | grep -q '"iterations":120000'
+          echo "$body" | grep -q '"salt"'
+
+      - name: Check password registration requires Turnstile
         shell: bash
         run: |
           set -euo pipefail
@@ -33,7 +67,7 @@ jobs:
             -X POST \
             -H 'content-type: application/json' \
             --data '{}' \
-            https://chibi-character.c-media-satoru.workers.dev/api/auth/register/options)
+            https://chibi-character.c-media-satoru.workers.dev/api/auth/password/register)
           cat "$tmp"
           test "$code" = '400'
           grep -q 'Turnstile token is required' "$tmp"
@@ -47,21 +81,7 @@ jobs:
             -X POST \
             -H 'content-type: application/json' \
             --data '{"turnstileToken":"not-a-valid-turnstile-token"}' \
-            https://chibi-character.c-media-satoru.workers.dev/api/auth/register/options)
+            https://chibi-character.c-media-satoru.workers.dev/api/auth/password/login)
           cat "$tmp"
           test "$code" = '403'
           grep -q 'Human verification failed' "$tmp"
-
-      - name: Check login options reach D1-backed auth
-        shell: bash
-        run: |
-          set -euo pipefail
-          tmp=$(mktemp)
-          code=$(curl -sS -o "$tmp" -w '%{http_code}' \
-            -X POST \
-            -H 'content-type: application/json' \
-            --data '{}' \
-            https://chibi-character.c-media-satoru.workers.dev/api/auth/login/options)
-          cat "$tmp"
-          test "$code" = '200'
-          grep -q '"challenge"' "$tmp"
