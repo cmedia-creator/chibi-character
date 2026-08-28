@@ -63,6 +63,7 @@ jobs:
             'users',
             'passkey_credentials',
             'password_credentials',
+            'auth_rate_limits',
             'webauthn_challenges',
             'sessions',
             'characters',
