@@ -17,6 +17,7 @@ const params = new URLSearchParams(window.location.search);
 const stageHost = document.querySelector<HTMLDivElement>('#pixi-stage');
 const engineStatus = document.querySelector<HTMLSpanElement>('#engine-status');
 const actionStatus = document.querySelector<HTMLElement>('#action-status');
+const characterSource = document.querySelector<HTMLElement>('#character-source');
 const blinkButton = document.querySelector<HTMLButtonElement>('#blink-button');
 const waveButton = document.querySelector<HTMLButtonElement>('#wave-button');
 const heartButton = document.querySelector<HTMLButtonElement>('#heart-button');
@@ -24,7 +25,7 @@ const walkButton = document.querySelector<HTMLButtonElement>('#walk-button');
 const sitButton = document.querySelector<HTMLButtonElement>('#sit-button');
 
 if (
-  !stageHost || !engineStatus || !actionStatus || !blinkButton || !waveButton ||
+  !stageHost || !engineStatus || !actionStatus || !characterSource || !blinkButton || !waveButton ||
   !heartButton || !walkButton || !sitButton
 ) {
   throw new Error('Required DOM elements are missing.');
@@ -94,6 +95,22 @@ const readyLabel = (): string => isTestCharacter ? 'TEST CHARACTER ACTIVE' : 'DE
 const setStatus = (message: string): void => {
   actionStatus.textContent = message;
 };
+
+type CharacterSourceDetail = {
+  id: string;
+  name: string;
+  updatedAt: number;
+  source: 'saved' | 'restored';
+};
+
+const onCharacterSource = (event: Event): void => {
+  const detail = (event as CustomEvent<CharacterSourceDetail>).detail;
+  if (!detail?.id || !detail.name) return;
+  const sourceLabel = detail.source === 'restored' ? 'D1 RESTORED' : 'D1 SAVED';
+  characterSource.textContent = `${detail.name} / ${sourceLabel}`;
+  setStatus(`${sourceLabel} ${detail.id.slice(0, 8)}…`);
+};
+window.addEventListener('chibi:character-source', onCharacterSource);
 
 const behaviorLabel = (state: BehaviorState): string => {
   if (state === 'look') return 'LOOK AROUND';
@@ -193,6 +210,7 @@ if (params.has('public')) {
 }
 
 window.addEventListener('beforeunload', () => {
+  window.removeEventListener('chibi:character-source', onCharacterSource);
   resizeObserver.disconnect();
   unmountInspector?.();
   unmountCreator?.();
