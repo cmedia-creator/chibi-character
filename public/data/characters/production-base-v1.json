@@ -1,0 +1,29 @@
+{
+  "id": "character.production-base-v1",
+  "schemaVersion": 2,
+  "root": { "x": 512, "y": 930, "scale": 1 },
+  "bones": [
+    { "name": "pelvis", "x": 0, "y": -430, "zIndex": 20 },
+    { "name": "body", "parent": "pelvis", "x": 0, "y": 0, "zIndex": 40 },
+    { "name": "head", "parent": "body", "x": 0, "y": -235, "zIndex": 100 },
+    { "name": "arm_L", "parent": "body", "x": -95, "y": -80, "zIndex": 75 },
+    { "name": "arm_R", "parent": "body", "x": 95, "y": -80, "zIndex": 85 },
+    { "name": "leg_L", "parent": "pelvis", "x": -42, "y": 90, "zIndex": 10 },
+    { "name": "leg_R", "parent": "pelvis", "x": 42, "y": 90, "zIndex": 11 }
+  ],
+  "parts": [
+    {
+      "id": "production.base.preview",
+      "slot": "production_preview",
+      "bone": "pelvis",
+      "asset": "/assets/production-base-v1/production-base-v1-static.webp",
+      "x": 0,
+      "y": 0,
+      "width": 420,
+      "height": 626,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "zIndex": 10
+    }
+  ]
+}

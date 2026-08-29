@@ -69,16 +69,26 @@ if (params.has('room')) {
   world.addChild(roomRenderer.container);
 }
 
+let isProductionPreview = false;
 let isTestCharacter = true;
 let rig: AtlasCharacterRig | CharacterRig;
 
 try {
-  rig = await AtlasCharacterRig.create(
-    '/data/characters/test-character-01.json',
-    '/data/motions/phase1.json',
-  );
+  if (params.get('base') === 'production') {
+    isProductionPreview = true;
+    rig = await AtlasCharacterRig.create(
+      '/data/characters/production-base-v1.json',
+      '/data/motions/phase1.json',
+    );
+  } else {
+    rig = await AtlasCharacterRig.create(
+      '/data/characters/test-character-01.json',
+      '/data/motions/phase1.json',
+    );
+  }
 } catch (error) {
-  console.warn('Test character atlas is not available yet. Falling back to DEBUG RIG.', error);
+  console.warn('Character atlas is not available. Falling back to DEBUG RIG.', error);
+  isProductionPreview = false;
   isTestCharacter = false;
   rig = await CharacterRig.create(
     '/data/characters/debug-rig-01.json',
@@ -104,7 +114,10 @@ fitWorldToStage();
 const resizeObserver = new ResizeObserver(fitWorldToStage);
 resizeObserver.observe(stageHost);
 
-const readyLabel = (): string => isTestCharacter ? 'TEST CHARACTER ACTIVE' : 'DEBUG RIG FALLBACK';
+const readyLabel = (): string => {
+  if (isProductionPreview) return 'PRODUCTION BASE PREVIEW';
+  return isTestCharacter ? 'TEST CHARACTER ACTIVE' : 'DEBUG RIG FALLBACK';
+};
 const setStatus = (message: string): void => {
   actionStatus.textContent = message;
 };
@@ -137,15 +150,17 @@ const behaviorLabel = (state: BehaviorState): string => {
 };
 
 const behavior = new BehaviorController(rig, (state) => setStatus(behaviorLabel(state)));
-if (params.get('auto') === '0') behavior.setEnabled(false);
+if (isProductionPreview || params.get('auto') === '0') behavior.setEnabled(false);
 
 const blink = async (): Promise<void> => {
+  if (isProductionPreview) return;
   setStatus('BLINK');
   await rig.blinkNow();
   setStatus(readyLabel());
 };
 
 const playMotion = async (id: string, label: string): Promise<void> => {
+  if (isProductionPreview) return;
   if (!rig.canPlay(id)) {
     setStatus(`${label} NOT AVAILABLE`);
     return;
@@ -156,17 +171,21 @@ const playMotion = async (id: string, label: string): Promise<void> => {
 };
 
 rig.onTap(() => {
-  void behavior.onTap();
+  if (!isProductionPreview) void behavior.onTap();
 });
 blinkButton.addEventListener('click', () => void blink());
-waveButton.addEventListener('click', () => void behavior.onTap());
+waveButton.addEventListener('click', () => {
+  if (!isProductionPreview) void behavior.onTap();
+});
 heartButton.addEventListener('click', () => void playMotion('motion.heart.001', 'HEART'));
 walkButton.addEventListener('click', () => void playMotion('motion.walk.inplace.001', 'WALK'));
 sitButton.addEventListener('click', () => void playMotion('motion.sit.001', 'SIT'));
 
-heartButton.disabled = !rig.canPlay('motion.heart.001');
-walkButton.disabled = !rig.canPlay('motion.walk.inplace.001');
-sitButton.disabled = !rig.canPlay('motion.sit.001');
+blinkButton.disabled = isProductionPreview;
+waveButton.disabled = isProductionPreview;
+heartButton.disabled = isProductionPreview || !rig.canPlay('motion.heart.001');
+walkButton.disabled = isProductionPreview || !rig.canPlay('motion.walk.inplace.001');
+sitButton.disabled = isProductionPreview || !rig.canPlay('motion.sit.001');
 
 let hiddenAt: number | null = null;
 document.addEventListener('visibilitychange', () => {
@@ -177,25 +196,28 @@ document.addEventListener('visibilitychange', () => {
   if (hiddenAt !== null) {
     const away = Date.now() - hiddenAt;
     hiddenAt = null;
-    void behavior.greetAfterAbsence(away);
+    if (!isProductionPreview) void behavior.greetAfterAbsence(away);
   }
 });
 
 app.ticker.add((ticker: { deltaMS: number }) => {
   rig.update(ticker.deltaMS);
-  behavior.update(ticker.deltaMS);
+  if (!isProductionPreview) behavior.update(ticker.deltaMS);
 });
 
 engineStatus.textContent = 'ENGINE READY';
 setStatus(readyLabel());
+if (isProductionPreview) {
+  characterSource.textContent = 'PRODUCTION BASE V1 / STATIC GATE';
+}
 
 let unmountInspector: (() => void) | null = null;
-if (params.has('inspect') && rig instanceof AtlasCharacterRig) {
+if (params.has('inspect') && rig instanceof AtlasCharacterRig && !isProductionPreview) {
   unmountInspector = mountCharacterInspector(rig);
 }
 
 let unmountCreator: (() => void) | null = null;
-if (params.has('creator') && rig instanceof AtlasCharacterRig) {
+if (params.has('creator') && rig instanceof AtlasCharacterRig && !isProductionPreview) {
   unmountCreator = await mountCharacterCreator({ rig });
 }
 
