@@ -13,6 +13,19 @@ import { mountShareStudio } from './share/ShareStudio';
 
 const WORLD_SIZE = 1024;
 const params = new URLSearchParams(window.location.search);
+const activeMode = params.has('creator')
+  ? 'creator'
+  : params.has('profile')
+    ? 'profile'
+    : params.has('share')
+      ? 'share'
+      : 'live';
+
+for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-nav]')) {
+  const active = link.dataset.nav === activeMode;
+  link.classList.toggle('is-active', active);
+  if (active) link.setAttribute('aria-current', 'page');
+}
 
 const stageHost = document.querySelector<HTMLDivElement>('#pixi-stage');
 const engineStatus = document.querySelector<HTMLSpanElement>('#engine-status');
