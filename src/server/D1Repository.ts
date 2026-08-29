@@ -59,7 +59,7 @@ export class D1Repository implements ServerRepository {
       .prepare(`
         SELECT id, user_id, name, appearance_json, room_json, schema_version, created_at, updated_at
         FROM characters
-        WHERE user_id = ?
+        WHERE user_id = ? AND is_active = 1
         ORDER BY updated_at DESC
       `)
       .bind(userId)
@@ -68,43 +68,72 @@ export class D1Repository implements ServerRepository {
   }
 
   async saveCharacter(userId: string, input: SaveCharacterRequest, now: number): Promise<SaveCharacterResponse> {
-    const id = input.characterId ?? crypto.randomUUID();
-    const existing = await this.db
-      .prepare('SELECT user_id, created_at FROM characters WHERE id = ? LIMIT 1')
+    const requestedId = input.characterId?.trim() || null;
+    const latestOwned = await this.db
+      .prepare(`
+        SELECT id, user_id, created_at
+        FROM characters
+        WHERE user_id = ?
+        ORDER BY is_active DESC, updated_at DESC
+        LIMIT 1
+      `)
+      .bind(userId)
+      .first<{ id: string; user_id: string; created_at: number }>();
+
+    let id = requestedId ?? latestOwned?.id ?? crypto.randomUUID();
+    let existing = await this.db
+      .prepare('SELECT id, user_id, created_at FROM characters WHERE id = ? LIMIT 1')
       .bind(id)
-      .first<{ user_id: string; created_at: number }>();
+      .first<{ id: string; user_id: string; created_at: number }>();
 
     if (existing && existing.user_id !== userId) {
       throw new RepositoryForbiddenError('Character belongs to another user.');
     }
 
+    // MVP rule: one account owns one active saved character. Saving without an ID
+    // updates the existing character. A caller cannot manufacture a second row by
+    // submitting a fresh arbitrary characterId. Paid multi-save can replace this
+    // check with an entitlement/slot limit later.
+    if (requestedId && !existing && latestOwned) {
+      throw new RepositoryConflictError('Only one saved character is available in the MVP.');
+    }
+
+    if (!existing && !requestedId && latestOwned) {
+      id = latestOwned.id;
+      existing = latestOwned;
+    }
+
     const createdAt = existing?.created_at ?? now;
     const draft = input.draft;
-    await this.db
-      .prepare(`
-        INSERT INTO characters (
-          id, user_id, name, appearance_json, room_json, schema_version, is_active, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
-        ON CONFLICT(id) DO UPDATE SET
-          name = excluded.name,
-          appearance_json = excluded.appearance_json,
-          room_json = excluded.room_json,
-          schema_version = excluded.schema_version,
-          is_active = 1,
-          updated_at = excluded.updated_at
-        WHERE characters.user_id = excluded.user_id
-      `)
-      .bind(
-        id,
-        userId,
-        draft.name,
-        JSON.stringify(draft.appearance),
-        JSON.stringify(draft.room),
-        draft.schemaVersion,
-        createdAt,
-        now,
-      )
-      .run();
+    await this.db.batch([
+      this.db
+        .prepare(`
+          INSERT INTO characters (
+            id, user_id, name, appearance_json, room_json, schema_version, is_active, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET
+            name = excluded.name,
+            appearance_json = excluded.appearance_json,
+            room_json = excluded.room_json,
+            schema_version = excluded.schema_version,
+            is_active = 1,
+            updated_at = excluded.updated_at
+          WHERE characters.user_id = excluded.user_id
+        `)
+        .bind(
+          id,
+          userId,
+          draft.name,
+          JSON.stringify(draft.appearance),
+          JSON.stringify(draft.room),
+          draft.schemaVersion,
+          createdAt,
+          now,
+        ),
+      this.db
+        .prepare('UPDATE characters SET is_active = 0 WHERE user_id = ? AND id <> ?')
+        .bind(userId, id),
+    ]);
 
     return {
       character: {
