@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 525 600">
+  <defs>
+    <linearGradient id="hair" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#211720"/>
+      <stop offset="0.48" stop-color="#3a2a35"/>
+      <stop offset="1" stop-color="#191219"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c7afbd" stop-opacity=".52"/>
+      <stop offset="1" stop-color="#9a7f8f" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <path d="M88 213C96 84 166 28 263 28s167 56 175 185c-27-18-57-30-91-34-20-42-47-64-84-69-37 5-64 27-84 69-34 4-64 16-91 34Z" fill="url(#hair)"/>
+  <path d="M93 210c-8 78 1 177 28 249 14 39 35 66 65 82-4-39-1-80 10-123-25-52-31-119-17-201-31-14-60-16-86-7Zm340 0c8 78-1 177-28 249-14 39-35 66-65 82 4-39 1-80-10-123 25-52 31-119 17-201 31-14 60-16 86-7Z" fill="#2b1f29"/>
+  <path d="M143 134c28-38 68-60 120-64 52 4 92 26 120 64-42-20-82-31-120-31s-78 11-120 31Z" fill="url(#shine)"/>
+  <path d="M253 108c-12 39-36 72-72 99-18 14-35 32-49 56 8-48 23-83 46-105 21-21 46-38 75-50Zm20 0c12 39 36 72 72 99 18 14 35 32 49 56-8-48-23-83-46-105-21-21-46-38-75-50Z" fill="url(#hair)"/>
+  <path d="M252 111c-1 45-1 86 0 123m22-123c1 45 1 86 0 123" fill="none" stroke="#b89cab" stroke-width="7" stroke-linecap="round" opacity=".28"/>
+  <path d="M173 232c-14 68-12 142 7 219m172-219c14 68 12 142-7 219" fill="none" stroke="#b79aaa" stroke-width="7" stroke-linecap="round" opacity=".2"/>
+</svg>
