@@ -100,6 +100,16 @@ export class AtlasCharacterRig {
     sprite.height = height;
   }
 
+  setPartTint(slot: string, tint: number): void {
+    const sprite = this.slots.get(slot);
+    if (!sprite) return;
+    sprite.tint = tint;
+  }
+
+  resetPartTint(slot: string): void {
+    this.setPartTint(slot, 0xffffff);
+  }
+
   getPartDebugStates(): PartDebugState[] {
     return [...this.slots.entries()].map(([slot, sprite]) => ({
       slot,
