@@ -7,9 +7,19 @@ export interface AtlasRegion {
   height: number;
 }
 
+export interface RigPartLayout {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  rotation?: number;
+  visible?: boolean;
+}
+
 export interface RigPartSource {
   asset: string;
   frame?: AtlasRegion;
+  layout?: RigPartLayout;
 }
 
 export interface CatalogBundle {
