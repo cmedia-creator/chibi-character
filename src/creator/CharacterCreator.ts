@@ -82,12 +82,23 @@ export async function mountCharacterCreator(options: {
   let draft: CharacterDraft = (await store.loadCharacterDraft()) ?? createEmptyCharacterDraft();
   let busy = false;
 
-  for (const category of Object.keys(CATEGORY_LABELS) as CatalogCategory[]) {
+  const categories = Object.keys(CATEGORY_LABELS) as CatalogCategory[];
+  for (const category of categories) {
     if (draft.appearance.parts[category]) continue;
     const firstUsable = catalog.bundles.find(
       (bundle) => bundle.category === category && canUseBundle(bundle, entitlements),
     );
     if (firstUsable) draft = applyBundleToDraft(draft, category, firstUsable);
+  }
+
+  // A D1/IndexedDB-restored draft must restore the actual rig appearance too,
+  // not just the selected IDs in the editor.
+  for (const category of categories) {
+    const bundleId = draft.appearance.parts[category];
+    const bundle = catalog.bundles.find((item) => item.id === bundleId);
+    if (bundle && canUseBundle(bundle, entitlements)) {
+      await applyCatalogBundle(options.rig, bundle, entitlements);
+    }
   }
 
   const appShell = document.querySelector<HTMLElement>('.app-shell');
@@ -104,6 +115,10 @@ export async function mountCharacterCreator(options: {
       </div>
       <button type="button" class="creator-randomize" data-randomize>おまかせ</button>
     </div>
+    <section class="creator-style-group">
+      <h4>HAIR STYLE</h4>
+      <div class="creator-style-buttons" data-hair-styles></div>
+    </section>
     <div class="creator-color-groups" data-colors></div>
     <div class="creator-save-line" data-save-state>端末へ自動保存</div>
     <details class="creator-details">
@@ -131,6 +146,7 @@ export async function mountCharacterCreator(options: {
   const saveState = root.querySelector<HTMLElement>('[data-save-state]')!;
   const categoriesHost = root.querySelector<HTMLDivElement>('[data-categories]')!;
   const colorsHost = root.querySelector<HTMLDivElement>('[data-colors]')!;
+  const hairStylesHost = root.querySelector<HTMLDivElement>('[data-hair-styles]')!;
   const packsHost = root.querySelector<HTMLDivElement>('[data-packs]')!;
   const randomizeButton = root.querySelector<HTMLButtonElement>('[data-randomize]')!;
   nameInput.value = draft.name === 'TEST CHARACTER 01' ? 'MY CHIBI' : draft.name;
@@ -174,6 +190,47 @@ export async function mountCharacterCreator(options: {
       button.setAttribute('aria-pressed', active ? 'true' : 'false');
     }
   };
+
+  const renderBundleSelection = (category: CatalogCategory): void => {
+    const selected = draft.appearance.parts[category] ?? '';
+    for (const button of root.querySelectorAll<HTMLButtonElement>(`[data-bundle-category="${category}"]`)) {
+      const active = button.dataset.bundleId === selected;
+      button.classList.toggle('is-selected', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    }
+  };
+
+  const selectBundle = async (category: CatalogCategory, bundle: CatalogBundle): Promise<void> => {
+    if (busy) return;
+    busy = true;
+    saveState.textContent = 'パーツを変更中…';
+    try {
+      await applyCatalogBundle(options.rig, bundle, entitlements);
+      draft = applyBundleToDraft(draft, category, bundle);
+      await saveDraft();
+      renderBundleSelection(category);
+    } catch (error) {
+      console.error(error);
+      saveState.textContent = error instanceof Error ? error.message : '変更できませんでした';
+    } finally {
+      busy = false;
+    }
+  };
+
+  const hairBundles = catalog.bundles.filter(
+    (bundle) => bundle.category === 'hair' && canUseBundle(bundle, entitlements),
+  );
+  for (const bundle of hairBundles) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'creator-style-button';
+    button.dataset.bundleCategory = 'hair';
+    button.dataset.bundleId = bundle.id;
+    button.setAttribute('aria-pressed', 'false');
+    button.innerHTML = `<strong>${escapeHtml(bundle.name)}</strong><small>${escapeHtml(styleHint(bundle))}</small>`;
+    button.addEventListener('click', () => void selectBundle('hair', bundle));
+    hairStylesHost.appendChild(button);
+  }
 
   for (const group of COLOR_GROUPS) {
     const current = draft.appearance.colors[group.key] ?? '#ffffff';
@@ -223,37 +280,22 @@ export async function mountCharacterCreator(options: {
     const button = document.createElement('button');
     button.type = 'button';
     const owned = bundle.isFree || (entitlements?.packIds.includes(bundle.packId) ?? false);
-    const selected = draft.appearance.parts[category] === bundle.id;
-    button.className = `creator-bundle${selected ? ' is-selected' : ''}${owned ? '' : ' is-locked'}`;
+    button.className = `creator-bundle${owned ? '' : ' is-locked'}`;
+    button.dataset.bundleCategory = category;
+    button.dataset.bundleId = bundle.id;
+    button.setAttribute('aria-pressed', 'false');
     button.innerHTML = `
       <span>${escapeHtml(bundle.name)}</span>
       <small>${owned ? (bundle.isFree ? 'FREE' : 'OWNED') : 'LOCKED'}</small>
       <em>${escapeHtml(bundle.description)}</em>
     `;
     button.disabled = !owned;
-    button.addEventListener('click', async () => {
-      if (busy) return;
-      busy = true;
-      saveState.textContent = 'パーツを変更中…';
-      try {
-        await applyCatalogBundle(options.rig, bundle, entitlements);
-        draft = applyBundleToDraft(draft, category, bundle);
-        await saveDraft();
-        for (const other of categoriesHost.querySelectorAll(`.creator-category:nth-child(${categoryIndex(category)}) .creator-bundle`)) {
-          other.classList.remove('is-selected');
-        }
-        button.classList.add('is-selected');
-      } catch (error) {
-        console.error(error);
-        saveState.textContent = error instanceof Error ? error.message : '変更できませんでした';
-      } finally {
-        busy = false;
-      }
-    });
+    button.addEventListener('click', () => void selectBundle(category, bundle));
     return button;
   };
 
-  for (const category of Object.keys(CATEGORY_LABELS) as CatalogCategory[]) renderCategory(category);
+  for (const category of categories) renderCategory(category);
+  for (const category of categories) renderBundleSelection(category);
 
   randomizeButton.addEventListener('click', async () => {
     if (busy) return;
@@ -261,6 +303,13 @@ export async function mountCharacterCreator(options: {
     randomizeButton.disabled = true;
     saveState.textContent = 'おまかせ作成中…';
     try {
+      if (hairBundles.length > 0) {
+        const hair = hairBundles[Math.floor(Math.random() * hairBundles.length)];
+        await applyCatalogBundle(options.rig, hair, entitlements);
+        draft = applyBundleToDraft(draft, 'hair', hair);
+        renderBundleSelection('hair');
+      }
+
       for (const group of COLOR_GROUPS) {
         const color = group.options[Math.floor(Math.random() * group.options.length)];
         applyColor(group, color.value);
@@ -299,8 +348,11 @@ export async function mountCharacterCreator(options: {
   };
 }
 
-function categoryIndex(category: CatalogCategory): number {
-  return (Object.keys(CATEGORY_LABELS) as CatalogCategory[]).indexOf(category) + 1;
+function styleHint(bundle: CatalogBundle): string {
+  if (bundle.tags.includes('long')) return 'LONG';
+  if (bundle.tags.includes('medium')) return 'MID';
+  if (bundle.tags.includes('bob')) return 'SHORT';
+  return 'STYLE';
 }
 
 function hexToNumber(value: string): number {
