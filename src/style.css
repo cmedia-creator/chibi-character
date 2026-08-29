@@ -22,7 +22,7 @@ button, input, select, textarea { font: inherit; }
   align-items: end;
   justify-content: space-between;
   gap: 18px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .eyebrow {
@@ -42,6 +42,33 @@ h1 { margin: 0; font-size: clamp(26px, 7vw, 42px); letter-spacing: -.03em; }
   letter-spacing: .08em;
   color: #d8d3e1;
   background: rgba(255,255,255,.05);
+}
+
+.app-nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  margin-bottom: 14px;
+  padding: 6px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 16px;
+  background: rgba(255,255,255,.025);
+}
+.app-nav a {
+  min-width: 0;
+  padding: 10px 7px;
+  border-radius: 11px;
+  color: #8f8999;
+  text-align: center;
+  text-decoration: none;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: .09em;
+  transition: background .16s ease, color .16s ease;
+}
+.app-nav a.is-active {
+  color: #17131c;
+  background: #f4ebf8;
 }
 
 .stage-card {
@@ -141,6 +168,8 @@ h1 { margin: 0; font-size: clamp(26px, 7vw, 42px); letter-spacing: -.03em; }
   .app-shell { padding-left: 12px; padding-right: 12px; }
   .topbar { gap: 10px; }
   .badge { font-size: 10px; padding: 6px 8px; }
+  .app-nav { gap: 5px; padding: 5px; }
+  .app-nav a { padding: 9px 4px; font-size: 8px; }
   .stage-card { border-radius: 22px; }
   .stage-copy { left: 16px; right: 16px; bottom: 14px; }
   .character-inspector { max-height: calc(100vh - 24px); overflow: auto; }
