@@ -14,6 +14,11 @@ const CATEGORY_LABELS: Record<CatalogCategory, string> = {
   accessory: 'ACCESSORY',
 };
 
+const QUICK_STYLE_GROUPS: Array<{ category: CatalogCategory; label: string }> = [
+  { category: 'hair', label: 'HAIR STYLE' },
+  { category: 'eyes', label: 'EYE STYLE' },
+];
+
 type ColorKey = 'hair' | 'eyes' | 'outfit';
 
 type ColorOption = {
@@ -91,8 +96,7 @@ export async function mountCharacterCreator(options: {
     if (firstUsable) draft = applyBundleToDraft(draft, category, firstUsable);
   }
 
-  // A D1/IndexedDB-restored draft must restore the actual rig appearance too,
-  // not just the selected IDs in the editor.
+  // Restore the actual visual state from the saved part IDs before the editor mounts.
   for (const category of categories) {
     const bundleId = draft.appearance.parts[category];
     const bundle = catalog.bundles.find((item) => item.id === bundleId);
@@ -115,10 +119,7 @@ export async function mountCharacterCreator(options: {
       </div>
       <button type="button" class="creator-randomize" data-randomize>おまかせ</button>
     </div>
-    <section class="creator-style-group">
-      <h4>HAIR STYLE</h4>
-      <div class="creator-style-buttons" data-hair-styles></div>
-    </section>
+    <div class="creator-style-groups" data-style-groups></div>
     <div class="creator-color-groups" data-colors></div>
     <div class="creator-save-line" data-save-state>端末へ自動保存</div>
     <details class="creator-details">
@@ -146,7 +147,7 @@ export async function mountCharacterCreator(options: {
   const saveState = root.querySelector<HTMLElement>('[data-save-state]')!;
   const categoriesHost = root.querySelector<HTMLDivElement>('[data-categories]')!;
   const colorsHost = root.querySelector<HTMLDivElement>('[data-colors]')!;
-  const hairStylesHost = root.querySelector<HTMLDivElement>('[data-hair-styles]')!;
+  const styleGroupsHost = root.querySelector<HTMLDivElement>('[data-style-groups]')!;
   const packsHost = root.querySelector<HTMLDivElement>('[data-packs]')!;
   const randomizeButton = root.querySelector<HTMLButtonElement>('[data-randomize]')!;
   nameInput.value = draft.name === 'TEST CHARACTER 01' ? 'MY CHIBI' : draft.name;
@@ -217,19 +218,31 @@ export async function mountCharacterCreator(options: {
     }
   };
 
-  const hairBundles = catalog.bundles.filter(
-    (bundle) => bundle.category === 'hair' && canUseBundle(bundle, entitlements),
-  );
-  for (const bundle of hairBundles) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'creator-style-button';
-    button.dataset.bundleCategory = 'hair';
-    button.dataset.bundleId = bundle.id;
-    button.setAttribute('aria-pressed', 'false');
-    button.innerHTML = `<strong>${escapeHtml(bundle.name)}</strong><small>${escapeHtml(styleHint(bundle))}</small>`;
-    button.addEventListener('click', () => void selectBundle('hair', bundle));
-    hairStylesHost.appendChild(button);
+  const quickBundles = new Map<CatalogCategory, CatalogBundle[]>();
+  for (const group of QUICK_STYLE_GROUPS) {
+    const bundles = catalog.bundles.filter(
+      (bundle) => bundle.category === group.category && canUseBundle(bundle, entitlements),
+    );
+    quickBundles.set(group.category, bundles);
+
+    const section = document.createElement('section');
+    section.className = 'creator-style-group';
+    section.innerHTML = `<h4>${group.label}</h4><div class="creator-style-buttons"></div>`;
+    const host = section.querySelector<HTMLDivElement>('.creator-style-buttons')!;
+
+    for (const bundle of bundles) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'creator-style-button';
+      button.dataset.bundleCategory = group.category;
+      button.dataset.bundleId = bundle.id;
+      button.setAttribute('aria-pressed', 'false');
+      button.innerHTML = `<strong>${escapeHtml(bundle.name)}</strong><small>${escapeHtml(styleHint(bundle))}</small>`;
+      button.addEventListener('click', () => void selectBundle(group.category, bundle));
+      host.appendChild(button);
+    }
+
+    styleGroupsHost.appendChild(section);
   }
 
   for (const group of COLOR_GROUPS) {
@@ -303,11 +316,13 @@ export async function mountCharacterCreator(options: {
     randomizeButton.disabled = true;
     saveState.textContent = 'おまかせ作成中…';
     try {
-      if (hairBundles.length > 0) {
-        const hair = hairBundles[Math.floor(Math.random() * hairBundles.length)];
-        await applyCatalogBundle(options.rig, hair, entitlements);
-        draft = applyBundleToDraft(draft, 'hair', hair);
-        renderBundleSelection('hair');
+      for (const group of QUICK_STYLE_GROUPS) {
+        const bundles = quickBundles.get(group.category) ?? [];
+        if (bundles.length === 0) continue;
+        const bundle = bundles[Math.floor(Math.random() * bundles.length)];
+        await applyCatalogBundle(options.rig, bundle, entitlements);
+        draft = applyBundleToDraft(draft, group.category, bundle);
+        renderBundleSelection(group.category);
       }
 
       for (const group of COLOR_GROUPS) {
@@ -352,6 +367,9 @@ function styleHint(bundle: CatalogBundle): string {
   if (bundle.tags.includes('long')) return 'LONG';
   if (bundle.tags.includes('medium')) return 'MID';
   if (bundle.tags.includes('bob')) return 'SHORT';
+  if (bundle.tags.includes('sharp')) return 'COOL';
+  if (bundle.tags.includes('round')) return 'ROUND';
+  if (bundle.tags.includes('idol')) return 'IDOL';
   return 'STYLE';
 }
 
