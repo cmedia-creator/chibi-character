@@ -101,6 +101,23 @@
       }
     },
     {
+      "id": "hair.sleek.long.001",
+      "category": "hair",
+      "name": "SLEEK LONG",
+      "description": "センターパートのストレートロング。前後を独立SVGで構成したPhase 2実パーツ。",
+      "packId": "free_base",
+      "isFree": true,
+      "tags": ["long", "sleek", "straight", "center-part", "idol", "asset"],
+      "sources": {
+        "hair_back": {
+          "asset": "/assets/hair/sleek-long-back.svg"
+        },
+        "hair_front": {
+          "asset": "/assets/hair/sleek-long-front.svg"
+        }
+      }
+    },
+    {
       "id": "hair.medium.ribbon.001",
       "category": "hair",
       "name": "MEDIUM",
