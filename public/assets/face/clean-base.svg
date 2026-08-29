@@ -5,8 +5,8 @@
       <stop offset="1" stop-color="#f7d9cf"/>
     </linearGradient>
   </defs>
-  <ellipse cx="210" cy="198" rx="174" ry="176" fill="url(#skin)"/>
-  <ellipse cx="27" cy="210" rx="27" ry="41" fill="#f7d9cf"/>
-  <ellipse cx="393" cy="210" rx="27" ry="41" fill="#f7d9cf"/>
-  <ellipse cx="210" cy="314" rx="76" ry="22" fill="#efc6bd" opacity=".28"/>
+  <ellipse cx="210" cy="202" rx="158" ry="162" fill="url(#skin)"/>
+  <ellipse cx="48" cy="216" rx="23" ry="34" fill="#f7d9cf"/>
+  <ellipse cx="372" cy="216" rx="23" ry="34" fill="#f7d9cf"/>
+  <ellipse cx="210" cy="300" rx="62" ry="17" fill="#efc6bd" opacity=".22"/>
 </svg>
