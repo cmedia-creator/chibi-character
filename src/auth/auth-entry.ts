@@ -1,11 +1,21 @@
+import { mountCreatorCloudSave } from '../creator/CreatorCloudSave';
 import { mountAuthPanel } from './AuthPanel';
 
 const params = new URLSearchParams(window.location.search);
-let unmount: (() => void) | null = null;
+let unmountAuth: (() => void) | null = null;
+let unmountCreatorSave: (() => void) | null = null;
+
+if (params.has('creator')) {
+  try {
+    unmountCreatorSave = await mountCreatorCloudSave();
+  } catch (error) {
+    console.error('Creator cloud save control could not be mounted.', error);
+  }
+}
 
 if (params.has('auth')) {
   try {
-    unmount = await mountAuthPanel();
+    unmountAuth = await mountAuthPanel();
   } catch (error) {
     console.error('Auth panel could not be mounted.', error);
     const root = document.createElement('section');
@@ -15,7 +25,10 @@ if (params.has('auth')) {
   }
 }
 
-window.addEventListener('beforeunload', () => unmount?.());
+window.addEventListener('beforeunload', () => {
+  unmountCreatorSave?.();
+  unmountAuth?.();
+});
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>'"]/g, (char) => ({

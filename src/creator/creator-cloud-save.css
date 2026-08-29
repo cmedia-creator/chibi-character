@@ -1,0 +1,51 @@
+.creator-cloud-save {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  background: rgba(255,255,255,.035);
+}
+
+.creator-cloud-save__copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.creator-cloud-save__copy .eyebrow { margin: 0; }
+.creator-cloud-save__copy strong {
+  font-size: 12px;
+  color: #f5eff9;
+}
+.creator-cloud-save__copy span {
+  font-size: 9px;
+  color: #8f889b;
+  line-height: 1.5;
+}
+
+.creator-cloud-save button {
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid rgba(225,196,250,.35);
+  border-radius: 12px;
+  background: #f3eafb;
+  color: #17121d;
+  font-size: 11px;
+  font-weight: 850;
+  cursor: pointer;
+}
+.creator-cloud-save button:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+@media (max-width: 520px) {
+  .creator-cloud-save {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+  .creator-cloud-save button { width: 100%; }
+}
