@@ -42,8 +42,8 @@
     {
       "id": "hair.long.ribbon.001",
       "category": "hair",
-      "name": "Long Wave Ribbon",
-      "description": "ロングウェーブ＋前髪の初期K-POPアイドル風ヘア。",
+      "name": "LONG",
+      "description": "現在のロングウェーブ。実パーツ切替の基準スタイル。",
       "packId": "free_base",
       "isFree": true,
       "tags": ["long", "wave", "ribbon", "kpop"],
@@ -55,6 +55,48 @@
         "hair_front": {
           "asset": "/test-character-01-atlas.webp",
           "frame": { "x": 180, "y": 164, "width": 124, "height": 152 }
+        }
+      }
+    },
+    {
+      "id": "hair.medium.ribbon.001",
+      "category": "hair",
+      "name": "MEDIUM",
+      "description": "同一原画を肩丈へ切り出した技術検証用ミディアム。",
+      "packId": "free_base",
+      "isFree": true,
+      "tags": ["medium", "wave", "idol", "prototype"],
+      "sources": {
+        "hair_back": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 22, "y": 4, "width": 115, "height": 120 },
+          "layout": { "x": 0, "y": -246, "width": 520, "height": 520 }
+        },
+        "hair_front": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 180, "y": 164, "width": 124, "height": 120 },
+          "layout": { "x": 0, "y": -5, "width": 510, "height": 480 }
+        }
+      }
+    },
+    {
+      "id": "hair.bob.ribbon.001",
+      "category": "hair",
+      "name": "BOB",
+      "description": "同一原画の下部を切り、ボブ丈へ寄せた技術検証スタイル。",
+      "packId": "free_base",
+      "isFree": true,
+      "tags": ["bob", "short", "idol", "prototype"],
+      "sources": {
+        "hair_back": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 22, "y": 4, "width": 115, "height": 90 },
+          "layout": { "x": 0, "y": -296, "width": 490, "height": 420 }
+        },
+        "hair_front": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 180, "y": 164, "width": 124, "height": 100 },
+          "layout": { "x": 0, "y": -50, "width": 490, "height": 390 }
         }
       }
     },
