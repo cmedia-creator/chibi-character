@@ -176,12 +176,38 @@
     {
       "id": "accessory.none.001",
       "category": "accessory",
-      "name": "No Accessory",
-      "description": "追加アクセサリーなし。",
+      "name": "NONE",
+      "description": "頬アクセサリーなし。",
       "packId": "free_base",
       "isFree": true,
-      "tags": ["none"],
-      "sources": {}
+      "tags": ["none", "clean"],
+      "sources": {
+        "accessory": { "asset": "/assets/accessories/none.svg" }
+      }
+    },
+    {
+      "id": "accessory.heart.001",
+      "category": "accessory",
+      "name": "HEART",
+      "description": "ピンク〜パープルのハート型チークステッカー。別アセット切替の技術検証用。",
+      "packId": "free_base",
+      "isFree": true,
+      "tags": ["heart", "pink", "cute", "prototype"],
+      "sources": {
+        "accessory": { "asset": "/assets/accessories/heart-sticker.svg" }
+      }
+    },
+    {
+      "id": "accessory.star.001",
+      "category": "accessory",
+      "name": "STAR",
+      "description": "ブルー〜パープルのスター型チークステッカー。別アセット切替の技術検証用。",
+      "packId": "free_base",
+      "isFree": true,
+      "tags": ["star", "blue", "cool", "prototype"],
+      "sources": {
+        "accessory": { "asset": "/assets/accessories/star-sticker.svg" }
+      }
     }
   ],
   "packs": [

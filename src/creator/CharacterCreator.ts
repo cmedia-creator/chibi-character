@@ -17,6 +17,7 @@ const CATEGORY_LABELS: Record<CatalogCategory, string> = {
 const QUICK_STYLE_GROUPS: Array<{ category: CatalogCategory; label: string }> = [
   { category: 'hair', label: 'HAIR STYLE' },
   { category: 'eyes', label: 'EYE STYLE' },
+  { category: 'accessory', label: 'ACCESSORY' },
 ];
 
 type ColorKey = 'hair' | 'eyes' | 'outfit';
@@ -369,6 +370,9 @@ function styleHint(bundle: CatalogBundle): string {
   if (bundle.tags.includes('bob')) return 'SHORT';
   if (bundle.tags.includes('sharp')) return 'COOL';
   if (bundle.tags.includes('round')) return 'ROUND';
+  if (bundle.tags.includes('heart')) return 'CUTE';
+  if (bundle.tags.includes('star')) return 'COOL';
+  if (bundle.tags.includes('none')) return 'OFF';
   if (bundle.tags.includes('idol')) return 'IDOL';
   return 'STYLE';
 }

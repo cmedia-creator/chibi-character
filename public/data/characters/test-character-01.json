@@ -83,6 +83,12 @@
       "anchorX": 0.5, "anchorY": 0.5, "zIndex": 25
     },
     {
+      "id": "test.accessory", "slot": "accessory", "bone": "head",
+      "asset": "/assets/accessories/none.svg",
+      "x": 98, "y": 77, "width": 48, "height": 48,
+      "anchorX": 0.5, "anchorY": 0.5, "zIndex": 35
+    },
+    {
       "id": "test.hair.front", "slot": "hair_front", "bone": "head",
       "asset": "/test-character-01-atlas.webp",
       "frame": { "x": 180, "y": 164, "width": 124, "height": 152 },
