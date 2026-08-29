@@ -32,19 +32,19 @@ type ColorGroup = {
 const COLOR_GROUPS: ColorGroup[] = [
   {
     key: 'hair',
-    label: 'HAIR COLOR',
+    label: 'HAIR',
     slots: ['hair_back', 'hair_front'],
     options: [
       { id: 'original', label: 'Original', value: '#ffffff' },
       { id: 'cocoa', label: 'Cocoa', value: '#d7b7b0' },
       { id: 'rose', label: 'Rose', value: '#ffc2d7' },
       { id: 'lavender', label: 'Lavender', value: '#d7c5ff' },
-      { id: 'ice', label: 'Ice Blue', value: '#c5e2ff' },
+      { id: 'ice', label: 'Ice', value: '#c5e2ff' },
     ],
   },
   {
     key: 'eyes',
-    label: 'EYE COLOR',
+    label: 'EYES',
     slots: ['eyes_open', 'eyes_closed'],
     options: [
       { id: 'original', label: 'Violet', value: '#ffffff' },
@@ -56,8 +56,10 @@ const COLOR_GROUPS: ColorGroup[] = [
   },
   {
     key: 'outfit',
-    label: 'OUTFIT ACCENT',
-    slots: ['torso', 'arm_L', 'arm_R', 'leg_L', 'leg_R'],
+    label: 'OUTFIT',
+    // The current arm/leg sprites contain skin, so tint only the torso until
+    // clothing and skin are split into independent production slots.
+    slots: ['torso'],
     options: [
       { id: 'original', label: 'Original', value: '#ffffff' },
       { id: 'pink', label: 'Pink', value: '#ffd2e6' },
@@ -88,44 +90,42 @@ export async function mountCharacterCreator(options: {
     if (firstUsable) draft = applyBundleToDraft(draft, category, firstUsable);
   }
 
+  const appShell = document.querySelector<HTMLElement>('.app-shell');
+  const controls = document.querySelector<HTMLElement>('.controls');
+  appShell?.classList.add('is-creator-mode');
+
   const root = document.createElement('section');
-  root.className = 'creator-lab';
+  root.className = 'creator-lab creator-lab-compact';
   root.innerHTML = `
-    <div class="creator-head">
+    <div class="creator-quick-head">
       <div>
-        <p class="eyebrow">PHASE 2 / CHARACTER CREATE</p>
-        <h2>CREATE MY CHIBI</h2>
+        <p class="eyebrow">CREATE / QUICK EDIT</p>
+        <h2>LOOK</h2>
       </div>
-      <span class="badge">LOCAL DRAFT</span>
+      <button type="button" class="creator-randomize" data-randomize>おまかせ</button>
     </div>
-    <div class="creator-name-row">
-      <label>CHARACTER NAME<input type="text" data-name maxlength="30" /></label>
-      <p data-save-state>IndexedDBへ保存</p>
-    </div>
-    <div class="creator-quick-actions">
-      <button type="button" data-randomize>おまかせで作る</button>
-      <p>変更はこの端末へ自動保存。D1へ送るのは保存ボタンを押した時だけです。</p>
-    </div>
-    <div class="creator-color-section">
-      <div class="creator-section-title">
-        <div>
-          <p class="eyebrow">COLOR MIX</p>
-          <h3>COLOR</h3>
+    <div class="creator-color-groups" data-colors></div>
+    <div class="creator-save-line" data-save-state>端末へ自動保存</div>
+    <details class="creator-details">
+      <summary>名前・パーツ・パックを設定</summary>
+      <div class="creator-details-body">
+        <div class="creator-name-row">
+          <label>CHARACTER NAME<input type="text" data-name maxlength="30" /></label>
+        </div>
+        <div class="creator-categories" data-categories></div>
+        <div class="creator-shop-preview">
+          <div>
+            <p class="eyebrow">PART PACKS</p>
+            <h3>STYLE PACK</h3>
+          </div>
+          <div class="creator-pack-grid" data-packs></div>
         </div>
       </div>
-      <div class="creator-color-groups" data-colors></div>
-    </div>
-    <div class="creator-categories" data-categories></div>
-    <div class="creator-shop-preview">
-      <div>
-        <p class="eyebrow">PART PACKS</p>
-        <h3>STYLE PACK</h3>
-      </div>
-      <div class="creator-pack-grid" data-packs></div>
-    </div>
+    </details>
   `;
 
-  document.querySelector('.app-shell')?.appendChild(root);
+  if (controls) controls.after(root);
+  else appShell?.appendChild(root);
 
   const nameInput = root.querySelector<HTMLInputElement>('[data-name]')!;
   const saveState = root.querySelector<HTMLElement>('[data-save-state]')!;
@@ -169,8 +169,9 @@ export async function mountCharacterCreator(options: {
   const renderColorSelection = (key: ColorKey): void => {
     const selected = draft.appearance.colors[key] ?? '#ffffff';
     for (const button of colorsHost.querySelectorAll<HTMLButtonElement>(`[data-color-key="${key}"]`)) {
-      button.classList.toggle('is-selected', button.dataset.colorValue === selected);
-      button.setAttribute('aria-pressed', button.dataset.colorValue === selected ? 'true' : 'false');
+      const active = button.dataset.colorValue === selected;
+      button.classList.toggle('is-selected', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
     }
   };
 
@@ -214,9 +215,7 @@ export async function mountCharacterCreator(options: {
     section.innerHTML = `<h3>${CATEGORY_LABELS[category]}</h3><div class="creator-bundle-grid"></div>`;
     const grid = section.querySelector<HTMLDivElement>('.creator-bundle-grid')!;
 
-    for (const bundle of bundles) {
-      grid.appendChild(makeBundleButton(category, bundle));
-    }
+    for (const bundle of bundles) grid.appendChild(makeBundleButton(category, bundle));
     categoriesHost.appendChild(section);
   };
 
@@ -294,7 +293,10 @@ export async function mountCharacterCreator(options: {
   }
 
   await saveDraft();
-  return () => root.remove();
+  return () => {
+    appShell?.classList.remove('is-creator-mode');
+    root.remove();
+  };
 }
 
 function categoryIndex(category: CatalogCategory): number {
