@@ -3,6 +3,8 @@ import type { CharacterDraft, EntitlementSnapshot } from '../data/models';
 import { canUseBundle } from '../catalog/CatalogService';
 import type { CatalogBundle, CatalogCategory } from '../catalog/types';
 
+const CLEAN_FACE_SOURCE = { asset: '/assets/face/clean-base.svg' };
+
 export async function applyCatalogBundle(
   rig: AtlasCharacterRig,
   bundle: CatalogBundle,
@@ -10,6 +12,15 @@ export async function applyCatalogBundle(
 ): Promise<void> {
   if (!canUseBundle(bundle, entitlements)) {
     throw new Error(`Pack required: ${bundle.packId}`);
+  }
+
+  // The current atlas face still contains prototype hair/scalp pixels baked into
+  // the face image. Production hair cannot layer cleanly over that source.
+  // Until face assets are rebuilt as independent parts, switch to a clean skin
+  // base whenever a hair bundle is applied.
+  if (bundle.category === 'hair') {
+    rig.resetPartDebugState('face');
+    await rig.replacePartSource('face', CLEAN_FACE_SOURCE);
   }
 
   await Promise.all(
