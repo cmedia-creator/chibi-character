@@ -23,8 +23,8 @@
     {
       "id": "eyes.violet.001",
       "category": "eyes",
-      "name": "Violet Idol Eyes",
-      "description": "開眼・閉眼をセットで持つ初期アイドルアイ。",
+      "name": "IDOL",
+      "description": "現在の大きめアイドルアイ。目型切替の基準スタイル。",
       "packId": "free_base",
       "isFree": true,
       "tags": ["violet", "bright", "idol"],
@@ -36,6 +36,48 @@
         "eyes_closed": {
           "asset": "/test-character-01-atlas.webp",
           "frame": { "x": 491, "y": 75, "width": 127, "height": 35 }
+        }
+      }
+    },
+    {
+      "id": "eyes.soft.001",
+      "category": "eyes",
+      "name": "SOFT",
+      "description": "同一原画を少し縦に広げた、柔らかい丸目寄りの技術検証スタイル。",
+      "packId": "free_base",
+      "isFree": true,
+      "tags": ["soft", "round", "idol", "prototype"],
+      "sources": {
+        "eyes_open": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 324, "y": 54, "width": 152, "height": 47 },
+          "layout": { "x": 0, "y": 24, "width": 300, "height": 96 }
+        },
+        "eyes_closed": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 491, "y": 75, "width": 127, "height": 35 },
+          "layout": { "x": 0, "y": 27, "width": 255, "height": 56 }
+        }
+      }
+    },
+    {
+      "id": "eyes.sharp.001",
+      "category": "eyes",
+      "name": "SHARP",
+      "description": "同一原画を横長に寄せた、クールな切れ長目の技術検証スタイル。",
+      "packId": "free_base",
+      "isFree": true,
+      "tags": ["sharp", "cool", "idol", "prototype"],
+      "sources": {
+        "eyes_open": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 324, "y": 54, "width": 152, "height": 47 },
+          "layout": { "x": 0, "y": 17, "width": 305, "height": 68 }
+        },
+        "eyes_closed": {
+          "asset": "/test-character-01-atlas.webp",
+          "frame": { "x": 491, "y": 75, "width": 127, "height": 35 },
+          "layout": { "x": 0, "y": 20, "width": 260, "height": 42 }
         }
       }
     },
