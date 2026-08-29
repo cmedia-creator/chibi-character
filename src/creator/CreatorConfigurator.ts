@@ -13,7 +13,14 @@ export async function applyCatalogBundle(
   }
 
   await Promise.all(
-    Object.entries(bundle.sources).map(([slot, source]) => rig.replacePartSource(slot, source)),
+    Object.entries(bundle.sources).map(async ([slot, source]) => {
+      // Always return the slot to its character-definition layout before applying
+      // a bundle-specific transform. This prevents MEDIUM -> LONG, etc. from
+      // inheriting the previous style's geometry.
+      rig.resetPartDebugState(slot);
+      await rig.replacePartSource(slot, source);
+      if (source.layout) rig.setPartDebugState(slot, source.layout);
+    }),
   );
 }
 
