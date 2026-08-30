@@ -16,7 +16,7 @@
       "id": "production.base.preview",
       "slot": "production_preview",
       "bone": "pelvis",
-      "asset": "/assets/production-base-v1/production-base-v1-static.webp",
+      "asset": "/assets/production-base-v1/production-pipeline-probe.svg",
       "x": 0,
       "y": 0,
       "width": 420,
