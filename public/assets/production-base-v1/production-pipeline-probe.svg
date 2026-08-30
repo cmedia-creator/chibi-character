@@ -1,14 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="420" height="626" viewBox="0 0 420 626">
-  <g fill="none" stroke="#d9c8ff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="210" cy="150" r="92" fill="#2b2436"/>
-    <path d="M140 130c20-55 120-55 140 0"/>
-    <circle cx="178" cy="155" r="10" fill="#efe7ff" stroke="none"/>
-    <circle cx="242" cy="155" r="10" fill="#efe7ff" stroke="none"/>
-    <path d="M190 190c12 10 28 10 40 0"/>
-    <path d="M155 255h110l28 150h-166z" fill="#3a3148"/>
-    <path d="M155 275l-48 116M265 275l48 116"/>
-    <path d="M173 405l-12 135M247 405l12 135"/>
-    <path d="M135 545h54M231 545h54"/>
-  </g>
-  <text x="210" y="590" text-anchor="middle" fill="#efe7ff" font-family="sans-serif" font-size="18" font-weight="700">PRODUCTION PIPELINE PROBE</text>
+  <rect width="420" height="626" fill="transparent"/>
+  <image href="/assets/production-base-v1/production-base-v1-static.webp" x="0" y="0" width="420" height="626" preserveAspectRatio="xMidYMid meet"/>
+  <text x="210" y="612" text-anchor="middle" fill="#efe7ff" font-family="sans-serif" font-size="14" font-weight="700">PRODUCTION ASSET BRIDGE</text>
 </svg>
