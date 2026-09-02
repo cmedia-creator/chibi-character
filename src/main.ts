@@ -3,6 +3,7 @@ import './style.css';
 import { AtlasCharacterRig } from './engine/AtlasCharacterRig';
 import { BehaviorController, type BehaviorState } from './engine/BehaviorController';
 import { CharacterRig } from './engine/CharacterRig';
+import { StageEffects } from './engine/StageEffects';
 import { mountCharacterInspector } from './debug/CharacterInspector';
 import { mountCharacterCreator } from './creator/CharacterCreator';
 import { mountProductionCreator } from './creator/ProductionCreator';
@@ -98,6 +99,10 @@ try {
 }
 
 world.addChild(rig.root);
+const stageEffects = new StageEffects();
+world.addChild(stageEffects.container);
+world.sortableChildren = true;
+world.sortChildren();
 
 const fitWorldToStage = (): void => {
   const width = Math.max(1, stageHost.clientWidth);
@@ -171,13 +176,18 @@ const playMotion = async (id: string, label: string): Promise<void> => {
 };
 
 rig.onTap(() => {
+  if (isProductionPreview) stageEffects.sparkleBurst();
   void behavior.onTap();
 });
 blinkButton.addEventListener('click', () => void blink());
 waveButton.addEventListener('click', () => {
+  if (isProductionPreview) stageEffects.sparkleBurst();
   void behavior.onTap();
 });
-heartButton.addEventListener('click', () => void playMotion('motion.heart.001', 'HEART'));
+heartButton.addEventListener('click', () => {
+  if (isProductionPreview) stageEffects.heartBurst();
+  void playMotion('motion.heart.001', 'HEART');
+});
 walkButton.addEventListener('click', () => void playMotion('motion.walk.inplace.001', 'WALK'));
 sitButton.addEventListener('click', () => void playMotion('motion.sit.001', 'SIT'));
 
@@ -202,6 +212,7 @@ document.addEventListener('visibilitychange', () => {
 app.ticker.add((ticker: { deltaMS: number }) => {
   rig.update(ticker.deltaMS);
   behavior.update(ticker.deltaMS);
+  stageEffects.update(ticker.deltaMS);
 });
 
 engineStatus.textContent = 'ENGINE READY';
@@ -258,6 +269,7 @@ window.addEventListener('beforeunload', () => {
   unmountProfile?.();
   unmountShareStudio?.();
   unmountPublicProfile?.();
+  stageEffects.destroy();
   rig.destroy();
   roomRenderer?.container.destroy({ children: true });
   app.destroy(true);
