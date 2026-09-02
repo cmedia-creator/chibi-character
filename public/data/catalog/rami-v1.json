@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "bundles": [
+    {
+      "id": "hair.rami.long.001",
+      "category": "hair",
+      "name": "LONG WAVE",
+      "description": "RAMI v1のセンターパート・ロングウェーブ。",
+      "packId": "rami_v1",
+      "isFree": true,
+      "tags": ["rami-v1", "production", "long", "wave", "blonde"],
+      "sources": {
+        "hair_overlay": {
+          "asset": "/assets/rami-v1/rami-v1-atlas.webp",
+          "frame": { "x": 192, "y": 0, "width": 192, "height": 288 }
+        }
+      }
+    },
+    {
+      "id": "hair.rami.pony.001",
+      "category": "hair",
+      "name": "HIGH PONY",
+      "description": "RAMI v1の淡いブルーのシュシュ付きハイポニー。",
+      "packId": "rami_v1",
+      "isFree": true,
+      "tags": ["rami-v1", "production", "ponytail", "blonde", "scrunchie"],
+      "sources": {
+        "hair_overlay": {
+          "asset": "/assets/rami-v1/rami-v1-atlas.webp",
+          "frame": { "x": 384, "y": 0, "width": 192, "height": 288 }
+        }
+      }
+    },
+    {
+      "id": "outfit.rami.blue.001",
+      "category": "outfit",
+      "name": "SKY BLUE IDOL",
+      "description": "白と淡いブルーの基本アイドル衣装。",
+      "packId": "rami_v1",
+      "isFree": true,
+      "tags": ["rami-v1", "production", "idol", "blue", "white"],
+      "sources": {
+        "outfit_overlay": {
+          "asset": "/assets/rami-v1/rami-v1-atlas.webp",
+          "frame": { "x": 576, "y": 0, "width": 192, "height": 288 }
+        }
+      }
+    },
+    {
+      "id": "outfit.rami.silver.001",
+      "category": "outfit",
+      "name": "SILVER STAGE",
+      "description": "きらめくシルバー系ステージ衣装。",
+      "packId": "rami_v1",
+      "isFree": true,
+      "tags": ["rami-v1", "production", "stage", "silver", "glitter"],
+      "sources": {
+        "outfit_overlay": {
+          "asset": "/assets/rami-v1/rami-v1-atlas.webp",
+          "frame": { "x": 0, "y": 288, "width": 192, "height": 288 }
+        }
+      }
+    },
+    {
+      "id": "outfit.rami.black.001",
+      "category": "outfit",
+      "name": "BLACK CASUAL",
+      "description": "黒の立体的なジャケットを中心にしたカジュアル衣装。",
+      "packId": "rami_v1",
+      "isFree": true,
+      "tags": ["rami-v1", "production", "black", "casual", "jacket"],
+      "sources": {
+        "outfit_overlay": {
+          "asset": "/assets/rami-v1/rami-v1-atlas.webp",
+          "frame": { "x": 192, "y": 288, "width": 192, "height": 288 }
+        }
+      }
+    },
+    {
+      "id": "outfit.rami.uniform.001",
+      "category": "outfit",
+      "name": "GRAY CARDIGAN",
+      "description": "グレーカーディガン、シャツ、ネクタイ、プリーツスカートのコーデ。",
+      "packId": "rami_v1",
+      "isFree": true,
+      "tags": ["rami-v1", "production", "gray", "cardigan", "uniform"],
+      "sources": {
+        "outfit_overlay": {
+          "asset": "/assets/rami-v1/rami-v1-atlas.webp",
+          "frame": { "x": 384, "y": 288, "width": 192, "height": 288 }
+        }
+      }
+    }
+  ],
+  "packs": [
+    {
+      "id": "rami_v1",
+      "name": "RAMI V1 PRIVATE PACK",
+      "description": "個人利用向けの固定キャラクター初期パーツ。顔と体は固定し、髪と衣装のみ交換する。",
+      "priceJpy": 0,
+      "available": true,
+      "themeTags": ["rami-v1", "private", "tiktok"]
+    }
+  ]
+}
