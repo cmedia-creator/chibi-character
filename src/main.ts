@@ -75,11 +75,11 @@ let isTestCharacter = true;
 let rig: AtlasCharacterRig | CharacterRig;
 
 try {
-  if (params.get('base') === 'production') {
+  if (params.get('base') !== 'test') {
     isProductionPreview = true;
     rig = await AtlasCharacterRig.create(
       '/data/characters/production-base-v1.json',
-      '/data/motions/phase1.json',
+      '/data/motions/idol-base-v2.json',
     );
   } else {
     rig = await AtlasCharacterRig.create(
@@ -151,7 +151,7 @@ const behaviorLabel = (state: BehaviorState): string => {
 };
 
 const behavior = new BehaviorController(rig, (state) => setStatus(behaviorLabel(state)));
-if (isProductionPreview || params.get('auto') === '0') behavior.setEnabled(false);
+if (params.get('auto') === '0') behavior.setEnabled(false);
 
 const blink = async (): Promise<void> => {
   if (isProductionPreview) return;
@@ -161,7 +161,6 @@ const blink = async (): Promise<void> => {
 };
 
 const playMotion = async (id: string, label: string): Promise<void> => {
-  if (isProductionPreview) return;
   if (!rig.canPlay(id)) {
     setStatus(`${label} NOT AVAILABLE`);
     return;
@@ -172,21 +171,20 @@ const playMotion = async (id: string, label: string): Promise<void> => {
 };
 
 rig.onTap(() => {
-  if (!isProductionPreview) void behavior.onTap();
+  void behavior.onTap();
 });
 blinkButton.addEventListener('click', () => void blink());
 waveButton.addEventListener('click', () => {
-  if (!isProductionPreview) void behavior.onTap();
+  void behavior.onTap();
 });
 heartButton.addEventListener('click', () => void playMotion('motion.heart.001', 'HEART'));
 walkButton.addEventListener('click', () => void playMotion('motion.walk.inplace.001', 'WALK'));
 sitButton.addEventListener('click', () => void playMotion('motion.sit.001', 'SIT'));
 
 blinkButton.disabled = isProductionPreview;
-waveButton.disabled = isProductionPreview;
-heartButton.disabled = isProductionPreview || !rig.canPlay('motion.heart.001');
-walkButton.disabled = isProductionPreview || !rig.canPlay('motion.walk.inplace.001');
-sitButton.disabled = isProductionPreview || !rig.canPlay('motion.sit.001');
+heartButton.disabled = !rig.canPlay('motion.heart.001');
+walkButton.disabled = !rig.canPlay('motion.walk.inplace.001');
+sitButton.disabled = !rig.canPlay('motion.sit.001');
 
 let hiddenAt: number | null = null;
 document.addEventListener('visibilitychange', () => {
@@ -197,19 +195,23 @@ document.addEventListener('visibilitychange', () => {
   if (hiddenAt !== null) {
     const away = Date.now() - hiddenAt;
     hiddenAt = null;
-    if (!isProductionPreview) void behavior.greetAfterAbsence(away);
+    void behavior.greetAfterAbsence(away);
   }
 });
 
 app.ticker.add((ticker: { deltaMS: number }) => {
   rig.update(ticker.deltaMS);
-  if (!isProductionPreview) behavior.update(ticker.deltaMS);
+  behavior.update(ticker.deltaMS);
 });
 
 engineStatus.textContent = 'ENGINE READY';
 setStatus(readyLabel());
 if (isProductionPreview) {
   characterSource.textContent = 'IDOL BASE V2 / FIXED IDENTITY + POSE';
+  waveButton.textContent = '挨拶';
+  heartButton.textContent = 'ファンサ';
+  walkButton.textContent = 'ダンス';
+  sitButton.textContent = 'ポーズ';
 }
 
 let unmountInspector: (() => void) | null = null;

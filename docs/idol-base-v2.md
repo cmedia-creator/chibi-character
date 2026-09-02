@@ -27,3 +27,17 @@ After approval, the fixed rehearsal frame becomes the registration standard for 
 6. accessories and secondary motion
 
 This preserves the product contract (one fixed pseudo-idol whose clothing changes) without pretending that a composite sprite is already a production rig.
+
+## Whole-character motion gate
+
+The approved fixed look can now use a dedicated motion catalog before limb extraction. The first motion pass animates the `pelvis` container, so every outfit shares the same safe transforms without tearing seams:
+
+- ambient breathing and sway
+- greeting bounce
+- short dance step
+- fan-service reaction
+- compact pose reaction
+
+Arm-specific waving, blinking, and expression changes remain disabled until their raster layers are separated.
+
+IDOL BASE V2 is now the default LIVE/CREATE character. The former technical test character remains available only with `?base=test`.
