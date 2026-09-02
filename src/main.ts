@@ -5,6 +5,7 @@ import { BehaviorController, type BehaviorState } from './engine/BehaviorControl
 import { CharacterRig } from './engine/CharacterRig';
 import { mountCharacterInspector } from './debug/CharacterInspector';
 import { mountCharacterCreator } from './creator/CharacterCreator';
+import { mountProductionCreator } from './creator/ProductionCreator';
 import { mountProfileEditor } from './profile/ProfileEditor';
 import { mountPublicProfilePreview } from './profile/PublicProfileView';
 import { mountRoomEditor } from './room/RoomEditor';
@@ -115,7 +116,7 @@ const resizeObserver = new ResizeObserver(fitWorldToStage);
 resizeObserver.observe(stageHost);
 
 const readyLabel = (): string => {
-  if (isProductionPreview) return 'PRODUCTION BASE PREVIEW';
+  if (isProductionPreview) return 'RAMI V1 LAYERED PREVIEW';
   return isTestCharacter ? 'TEST CHARACTER ACTIVE' : 'DEBUG RIG FALLBACK';
 };
 const setStatus = (message: string): void => {
@@ -208,7 +209,7 @@ app.ticker.add((ticker: { deltaMS: number }) => {
 engineStatus.textContent = 'ENGINE READY';
 setStatus(readyLabel());
 if (isProductionPreview) {
-  characterSource.textContent = 'PRODUCTION BASE V1 / STATIC GATE';
+  characterSource.textContent = 'RAMI V1 / FIXED FACE + BODY';
 }
 
 let unmountInspector: (() => void) | null = null;
@@ -217,8 +218,10 @@ if (params.has('inspect') && rig instanceof AtlasCharacterRig && !isProductionPr
 }
 
 let unmountCreator: (() => void) | null = null;
-if (params.has('creator') && rig instanceof AtlasCharacterRig && !isProductionPreview) {
-  unmountCreator = await mountCharacterCreator({ rig });
+if (params.has('creator') && rig instanceof AtlasCharacterRig) {
+  unmountCreator = isProductionPreview
+    ? await mountProductionCreator({ rig })
+    : await mountCharacterCreator({ rig });
 }
 
 let unmountRoom: (() => void) | null = null;
