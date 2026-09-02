@@ -1,5 +1,5 @@
 {
-  "id": "character.production-base-v1",
+  "id": "character.idol-base-v2",
   "schemaVersion": 2,
   "root": { "x": 512, "y": 512, "scale": 1 },
   "bones": [
@@ -13,46 +13,18 @@
   ],
   "parts": [
     {
-      "id": "rami.base.body",
-      "slot": "production_body",
+      "id": "idol.look.rehearsal",
+      "slot": "production_look",
       "bone": "pelvis",
-      "asset": "/assets/rami-v1/rami-v1-atlas.webp",
-      "frame": { "x": 0, "y": 0, "width": 192, "height": 288 },
+      "asset": "/assets/idol-base-v2/idol-look-strip.webp",
+      "frame": { "x": 0, "y": 0, "width": 192, "height": 422 },
       "x": 0,
       "y": 0,
-      "width": 560,
+      "width": 383,
       "height": 840,
       "anchorX": 0.5,
       "anchorY": 0.5,
       "zIndex": 10
-    },
-    {
-      "id": "rami.outfit.blue",
-      "slot": "outfit_overlay",
-      "bone": "pelvis",
-      "asset": "/assets/rami-v1/rami-v1-atlas.webp",
-      "frame": { "x": 576, "y": 0, "width": 192, "height": 288 },
-      "x": 0,
-      "y": 0,
-      "width": 560,
-      "height": 840,
-      "anchorX": 0.5,
-      "anchorY": 0.5,
-      "zIndex": 20
-    },
-    {
-      "id": "rami.hair.long",
-      "slot": "hair_overlay",
-      "bone": "pelvis",
-      "asset": "/assets/rami-v1/rami-v1-atlas.webp",
-      "frame": { "x": 192, "y": 0, "width": 192, "height": 288 },
-      "x": 0,
-      "y": 0,
-      "width": 560,
-      "height": 840,
-      "anchorX": 0.5,
-      "anchorY": 0.5,
-      "zIndex": 30
     }
   ]
 }
