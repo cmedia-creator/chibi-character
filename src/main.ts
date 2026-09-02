@@ -3,6 +3,7 @@ import './style.css';
 import { AtlasCharacterRig } from './engine/AtlasCharacterRig';
 import { BehaviorController, type BehaviorState } from './engine/BehaviorController';
 import { CharacterRig } from './engine/CharacterRig';
+import { PoseSequenceController } from './engine/PoseSequenceController';
 import { mountCharacterInspector } from './debug/CharacterInspector';
 import { mountCharacterCreator } from './creator/CharacterCreator';
 import { mountProductionCreator } from './creator/ProductionCreator';
@@ -72,13 +73,16 @@ if (params.has('room')) {
 
 let isProductionPreview = false;
 let isTestCharacter = true;
+const isExpressivePrototype = params.get('prototype') === 'expressive';
 let rig: AtlasCharacterRig | CharacterRig;
 
 try {
   if (params.get('base') !== 'test') {
     isProductionPreview = true;
     rig = await AtlasCharacterRig.create(
-      '/data/characters/production-base-v1.json',
+      isExpressivePrototype
+        ? '/data/characters/production-expressive-v1.json'
+        : '/data/characters/production-base-v1.json',
       '/data/motions/idol-base-v2.json',
     );
   } else {
@@ -98,6 +102,9 @@ try {
 }
 
 world.addChild(rig.root);
+const poseController = isExpressivePrototype && rig instanceof AtlasCharacterRig
+  ? new PoseSequenceController(rig)
+  : null;
 
 const fitWorldToStage = (): void => {
   const width = Math.max(1, stageHost.clientWidth);
@@ -154,6 +161,12 @@ const behavior = new BehaviorController(rig, (state) => setStatus(behaviorLabel(
 if (params.get('auto') === '0') behavior.setEnabled(false);
 
 const blink = async (): Promise<void> => {
+  if (poseController) {
+    setStatus('BLINK');
+    await poseController.blink();
+    setStatus(readyLabel());
+    return;
+  }
   if (isProductionPreview) return;
   setStatus('BLINK');
   await rig.blinkNow();
@@ -171,17 +184,25 @@ const playMotion = async (id: string, label: string): Promise<void> => {
 };
 
 rig.onTap(() => {
+  if (poseController) void poseController.wave();
   void behavior.onTap();
 });
 blinkButton.addEventListener('click', () => void blink());
 waveButton.addEventListener('click', () => {
+  if (poseController) void poseController.wave();
   void behavior.onTap();
 });
-heartButton.addEventListener('click', () => void playMotion('motion.heart.001', 'HEART'));
-walkButton.addEventListener('click', () => void playMotion('motion.walk.inplace.001', 'WALK'));
+heartButton.addEventListener('click', () => {
+  if (poseController) void poseController.heart();
+  void playMotion('motion.heart.001', 'HEART');
+});
+walkButton.addEventListener('click', () => {
+  if (poseController) void poseController.dance();
+  void playMotion('motion.walk.inplace.001', 'WALK');
+});
 sitButton.addEventListener('click', () => void playMotion('motion.sit.001', 'SIT'));
 
-blinkButton.disabled = isProductionPreview;
+blinkButton.disabled = isProductionPreview && !poseController;
 heartButton.disabled = !rig.canPlay('motion.heart.001');
 walkButton.disabled = !rig.canPlay('motion.walk.inplace.001');
 sitButton.disabled = !rig.canPlay('motion.sit.001');
@@ -207,7 +228,9 @@ app.ticker.add((ticker: { deltaMS: number }) => {
 engineStatus.textContent = 'ENGINE READY';
 setStatus(readyLabel());
 if (isProductionPreview) {
-  characterSource.textContent = 'IDOL BASE V2 / FIXED IDENTITY + POSE';
+  characterSource.textContent = isExpressivePrototype
+    ? 'EXPRESSIVE MOTION PROTOTYPE / REHEARSAL OUTFIT'
+    : 'IDOL BASE V2 / FIXED IDENTITY + POSE';
   waveButton.textContent = '挨拶';
   heartButton.textContent = 'ファンサ';
   walkButton.textContent = 'ダンス';
@@ -220,7 +243,7 @@ if (params.has('inspect') && rig instanceof AtlasCharacterRig && !isProductionPr
 }
 
 let unmountCreator: (() => void) | null = null;
-if (params.has('creator') && rig instanceof AtlasCharacterRig) {
+if (params.has('creator') && rig instanceof AtlasCharacterRig && !isExpressivePrototype) {
   unmountCreator = isProductionPreview
     ? await mountProductionCreator({ rig })
     : await mountCharacterCreator({ rig });
@@ -258,6 +281,7 @@ window.addEventListener('beforeunload', () => {
   unmountProfile?.();
   unmountShareStudio?.();
   unmountPublicProfile?.();
+  poseController?.destroy();
   rig.destroy();
   roomRenderer?.container.destroy({ children: true });
   app.destroy(true);
