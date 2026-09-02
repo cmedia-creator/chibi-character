@@ -7,7 +7,6 @@ import type { AtlasCharacterRig } from '../engine/AtlasCharacterRig';
 import { applyBundleToDraft, applyCatalogBundle } from './CreatorConfigurator';
 
 const EDITABLE_CATEGORIES: Array<{ category: CatalogCategory; label: string; hint: string }> = [
-  { category: 'hair', label: 'HAIR', hint: '髪型' },
   { category: 'outfit', label: 'OUTFIT', hint: '衣装' },
 ];
 
@@ -43,12 +42,12 @@ export async function mountProductionCreator(options: {
   root.innerHTML = `
     <div class="creator-quick-head">
       <div>
-        <p class="eyebrow">RAMI V1 / PRIVATE TIKTOK TOOL</p>
+        <p class="eyebrow">IDOL BASE V2 / PRIVATE TIKTOK TOOL</p>
         <h2>STYLE</h2>
       </div>
-      <span class="badge">FACE + BODY FIXED</span>
+      <span class="badge">IDENTITY + POSE FIXED</span>
     </div>
-    <p class="creator-save-line">顔と体は固定。髪型と衣装だけを差し替えます。</p>
+    <p class="creator-save-line">顔・髪・体格・姿勢を固定し、衣装だけを同じ位置で切り替えます。</p>
     <div class="creator-style-groups" data-production-groups></div>
     <div class="creator-save-line" data-production-save>端末へ保存済み</div>
   `;

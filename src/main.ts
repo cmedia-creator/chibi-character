@@ -116,7 +116,7 @@ const resizeObserver = new ResizeObserver(fitWorldToStage);
 resizeObserver.observe(stageHost);
 
 const readyLabel = (): string => {
-  if (isProductionPreview) return 'RAMI V1 LAYERED PREVIEW';
+  if (isProductionPreview) return 'IDOL BASE V2 OUTFIT PREVIEW';
   return isTestCharacter ? 'TEST CHARACTER ACTIVE' : 'DEBUG RIG FALLBACK';
 };
 const setStatus = (message: string): void => {
@@ -209,7 +209,7 @@ app.ticker.add((ticker: { deltaMS: number }) => {
 engineStatus.textContent = 'ENGINE READY';
 setStatus(readyLabel());
 if (isProductionPreview) {
-  characterSource.textContent = 'RAMI V1 / FIXED FACE + BODY';
+  characterSource.textContent = 'IDOL BASE V2 / FIXED IDENTITY + POSE';
 }
 
 let unmountInspector: (() => void) | null = null;
