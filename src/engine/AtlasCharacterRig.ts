@@ -105,8 +105,8 @@ export class AtlasCharacterRig {
     source: { asset: string; frame?: TextureFrameDefinition },
     duration = 120,
   ): Promise<void> {
-    const current = this.slots.get(slot);
-    if (!current || !current.parent || duration <= 0) {
+    const sprite = this.slots.get(slot);
+    if (!sprite || duration <= 0) {
       await this.replacePartSource(slot, source);
       return;
     }
@@ -121,38 +121,24 @@ export class AtlasCharacterRig {
         })
       : sourceTexture;
 
-    const next = new Sprite(texture);
-    const originalZIndex = current.zIndex;
-    next.label = current.label;
-    next.anchor.copyFrom(current.anchor);
-    next.position.copyFrom(current.position);
-    next.width = current.width;
-    next.height = current.height;
-    next.angle = current.angle;
-    next.tint = current.tint;
-    next.zIndex = originalZIndex + 0.01;
-    next.visible = current.visible;
-    next.alpha = 0;
-    current.parent.addChild(next);
-    current.parent.sortChildren();
-
     await new Promise<void>((resolve) => {
       const startedAt = performance.now();
+      let swapped = false;
       const animate = (now: number): void => {
         const raw = Math.min(1, (now - startedAt) / duration);
-        const eased = raw * raw * (3 - 2 * raw);
-        current.alpha = 1 - eased;
-        next.alpha = eased;
+        const halfProgress = raw < 0.5 ? raw * 2 : (1 - raw) * 2;
+        const eased = halfProgress * halfProgress * (3 - 2 * halfProgress);
+        sprite.alpha = 1 - eased * 0.62;
+        if (!swapped && raw >= 0.5) {
+          sprite.texture = texture;
+          swapped = true;
+        }
         if (raw < 1) window.requestAnimationFrame(animate);
         else resolve();
       };
       window.requestAnimationFrame(animate);
     });
-
-    current.destroy();
-    next.alpha = 1;
-    next.zIndex = originalZIndex;
-    this.slots.set(slot, next);
+    sprite.alpha = 1;
   }
 
   setPartTint(slot: string, tint: number): void {
