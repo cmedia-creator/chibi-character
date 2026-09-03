@@ -16,7 +16,7 @@
       "id": "idol.expressive.neutral",
       "slot": "production_look",
       "bone": "pelvis",
-      "asset": "/assets/idol-expressive-v1/rehearsal-motion-atlas.webp",
+      "asset": "/assets/idol-expressive-v1/rehearsal-motion-atlas-v2.png",
       "frame": { "x": 0, "y": 0, "width": 384, "height": 512 },
       "x": 0,
       "y": 0,

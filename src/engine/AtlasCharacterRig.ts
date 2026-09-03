@@ -100,47 +100,6 @@ export class AtlasCharacterRig {
     sprite.height = height;
   }
 
-  async transitionPartSource(
-    slot: string,
-    source: { asset: string; frame?: TextureFrameDefinition },
-    duration = 120,
-  ): Promise<void> {
-    const sprite = this.slots.get(slot);
-    if (!sprite || duration <= 0) {
-      await this.replacePartSource(slot, source);
-      return;
-    }
-
-    await Assets.load(source.asset);
-    const sourceTexture = Assets.get(source.asset) as Texture | undefined;
-    if (!sourceTexture) throw new Error(`Texture missing: ${source.asset}`);
-    const texture = source.frame
-      ? new Texture({
-          source: sourceTexture.source,
-          frame: new Rectangle(source.frame.x, source.frame.y, source.frame.width, source.frame.height),
-        })
-      : sourceTexture;
-
-    await new Promise<void>((resolve) => {
-      const startedAt = performance.now();
-      let swapped = false;
-      const animate = (now: number): void => {
-        const raw = Math.min(1, (now - startedAt) / duration);
-        const halfProgress = raw < 0.5 ? raw * 2 : (1 - raw) * 2;
-        const eased = halfProgress * halfProgress * (3 - 2 * halfProgress);
-        sprite.alpha = 1 - eased * 0.62;
-        if (!swapped && raw >= 0.5) {
-          sprite.texture = texture;
-          swapped = true;
-        }
-        if (raw < 1) window.requestAnimationFrame(animate);
-        else resolve();
-      };
-      window.requestAnimationFrame(animate);
-    });
-    sprite.alpha = 1;
-  }
-
   setPartTint(slot: string, tint: number): void {
     const sprite = this.slots.get(slot);
     if (!sprite) return;
