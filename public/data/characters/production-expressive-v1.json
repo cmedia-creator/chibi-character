@@ -1,0 +1,30 @@
+{
+  "id": "character.idol-expressive-v1",
+  "schemaVersion": 2,
+  "root": { "x": 512, "y": 512, "scale": 1 },
+  "bones": [
+    { "name": "pelvis", "x": 0, "y": 0, "zIndex": 20 },
+    { "name": "body", "parent": "pelvis", "x": 0, "y": 0, "zIndex": 40 },
+    { "name": "head", "parent": "body", "x": 0, "y": -235, "zIndex": 100 },
+    { "name": "arm_L", "parent": "body", "x": -95, "y": -80, "zIndex": 75 },
+    { "name": "arm_R", "parent": "body", "x": 95, "y": -80, "zIndex": 85 },
+    { "name": "leg_L", "parent": "pelvis", "x": -42, "y": 90, "zIndex": 10 },
+    { "name": "leg_R", "parent": "pelvis", "x": 42, "y": 90, "zIndex": 11 }
+  ],
+  "parts": [
+    {
+      "id": "idol.expressive.neutral",
+      "slot": "production_look",
+      "bone": "pelvis",
+      "asset": "/assets/idol-expressive-v1/rehearsal-motion-atlas-v2.png",
+      "frame": { "x": 0, "y": 0, "width": 384, "height": 512 },
+      "x": 0,
+      "y": 0,
+      "width": 630,
+      "height": 840,
+      "anchorX": 0.5,
+      "anchorY": 0.5,
+      "zIndex": 10
+    }
+  ]
+}
